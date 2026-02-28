@@ -1,0 +1,132 @@
+# =============================================================================
+# .github/workflows/ci.yml — Continuous Integration
+#
+# Triggers: every push to a non-main branch and every pull request targeting main.
+#
+# Jobs:
+#   build-and-test   — Compiles the Maven project and runs all unit tests
+#   terraform-validate — Initialises and validates all Terraform configurations
+#
+# No AWS credentials are required for this workflow. It is intentionally
+# scoped to things that can be verified without cloud access, keeping CI
+# fast and safe to run on every push.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Cancel any in-progress CI run for the same branch when a new push arrives.
+# Prevents queuing of stale runs on fast-moving branches.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ── Job 1: Build and Test ──────────────────────────────────────────────────
+  build-and-test:
+    name: Build and Test (Java 21)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: corretto        # Matches the Lambda Java 21 runtime (Amazon Corretto)
+          cache: maven                  # Caches ~/.m2 between runs — cuts dependency download time
+
+      # Full verify lifecycle: compile → test → package.
+      # -B: batch mode (no interactive prompts, machine-readable output)
+      # -T 1C: parallel build using one thread per CPU core
+      # Surefire produces XML reports in target/surefire-reports/ consumed below.
+      - name: Build and run tests
+        run: mvn -B -T 1C verify
+        working-directory: authorizer-lambda
+
+      # Publish test results as a native GitHub check so failures appear inline
+      # on the PR without needing to dig into raw logs.
+      - name: Publish test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()                    # Run even if the build step failed
+        with:
+          report_paths: "authorizer-lambda/target/surefire-reports/*.xml"
+          check_name: "Unit Test Results"
+          fail_on_failure: true
+
+      # Upload the shaded JAR as a build artifact. The deploy workflow downloads
+      # this artifact rather than rebuilding from scratch, ensuring the deployed
+      # binary is exactly what was tested.
+      - name: Upload shaded JAR
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: authorizer-jar-${{ github.sha }}
+          path: authorizer-lambda/target/lambda-authorizer-*.jar
+          retention-days: 7
+          if-no-files-found: error
+
+  # ── Job 2: Terraform Validate ──────────────────────────────────────────────
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: [dev, prod]        # Validate both environment configs in parallel
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.7"
+
+      # terraform init -backend=false skips remote state initialisation.
+      # Validation does not require AWS access or state — only the provider
+      # schema, which Terraform downloads during init.
+      - name: Terraform init (no backend)
+        run: terraform init -backend=false
+        working-directory: infrastructure/terraform
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: infrastructure/terraform
+
+      # terraform fmt -check exits non-zero if any file is not formatted.
+      # Enforces consistent style without modifying files in CI.
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive
+        working-directory: infrastructure/terraform
+
+      # tfsec performs static security analysis on Terraform code.
+      # Catches common misconfigurations (e.g. unencrypted resources,
+      # overly permissive IAM, missing logging) before they reach AWS.
+      - name: Run tfsec (static security analysis)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infrastructure/terraform
+          soft_fail: false              # Fail CI on HIGH or CRITICAL findings
+
+      # Validate that the .tfvars file for this environment parses correctly.
+      # This catches typos in variable values without running a full plan.
+      - name: Validate tfvars syntax (${{ matrix.environment }})
+        run: |
+          terraform init -backend=false
+          terraform validate -var-file=environments/${{ matrix.environment }}.tfvars \
+            -var="lambda_jar_path=/tmp/placeholder.jar" \
+            -var="vpc_id=vpc-00000000000000000" \
+            -var='private_subnet_ids=["subnet-00000000000000001"]'
+        working-directory: infrastructure/terraform

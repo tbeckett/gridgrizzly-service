@@ -1,0 +1,262 @@
+# =============================================================================
+# .github/workflows/deploy.yml — Continuous Deployment
+#
+# Triggers: every push to main (i.e. a merged PR).
+#
+# Jobs (run sequentially):
+#   build         — Compiles, tests, and packages the shaded JAR
+#   deploy-dev    — Deploys to dev (always runs after build)
+#   deploy-prod   — Deploys to prod (requires manual approval via environment gate)
+#
+# Secrets required (configured in GitHub → Settings → Secrets → Actions):
+#
+#   AWS_ROLE_ARN_DEV    ARN of the IAM role to assume for dev deployments
+#   AWS_ROLE_ARN_PROD   ARN of the IAM role to assume for prod deployments
+#
+# Both roles must trust GitHub Actions OIDC — no static access keys are stored.
+# See: https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+#
+# GitHub Environments required:
+#   dev   — no protection rules (auto-deploys on merge)
+#   prod  — required reviewer protection rule (manual gate before prod deploy)
+# =============================================================================
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+# Only one deploy workflow runs at a time across all environments.
+# A second merge to main while a deploy is in progress will wait,
+# not run in parallel, preventing race conditions on Terraform state.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write   # Required for OIDC token exchange with AWS
+  contents: read
+
+jobs:
+
+  # ── Job 1: Build ───────────────────────────────────────────────────────────
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    outputs:
+      jar_name: ${{ steps.jar_name.outputs.value }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Amazon Corretto)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: corretto
+          cache: maven
+
+      - name: Build, test, and package
+        run: mvn -B -T 1C verify
+        working-directory: authorizer-lambda
+
+      - name: Publish test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: "authorizer-lambda/target/surefire-reports/*.xml"
+          check_name: "Unit Test Results"
+          fail_on_failure: true
+
+      # Resolve the exact JAR filename (version may change between releases)
+      # and expose it as a job output for downstream jobs.
+      - name: Resolve JAR filename
+        id: jar_name
+        run: |
+          JAR=$(ls authorizer-lambda/target/lambda-authorizer-*.jar | head -1 | xargs basename)
+          echo "value=${JAR}" >> "$GITHUB_OUTPUT"
+          echo "JAR filename: ${JAR}"
+
+      # The shaded JAR is the only artifact that needs to travel between jobs.
+      # Uploading it here means deploy jobs don't re-run Maven — they deploy
+      # exactly the binary that was built and tested in this job.
+      - name: Upload shaded JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: authorizer-jar-${{ github.sha }}
+          path: authorizer-lambda/target/lambda-authorizer-*.jar
+          retention-days: 30
+          if-no-files-found: error
+
+  # ── Job 2: Deploy to Dev ───────────────────────────────────────────────────
+  deploy-dev:
+    name: Deploy → dev
+    runs-on: ubuntu-latest
+    needs: build
+    environment: dev                    # Maps to the GitHub "dev" environment
+
+    env:
+      TF_WORKSPACE: dev
+      TF_VAR_FILE: environments/dev.tfvars
+      AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download shaded JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: authorizer-jar-${{ github.sha }}
+          path: authorizer-lambda/target
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-deploy-dev-${{ github.run_id }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.7"
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: infrastructure/terraform
+
+      - name: Terraform plan
+        id: plan
+        run: |
+          terraform plan \
+            -var-file="${{ env.TF_VAR_FILE }}" \
+            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.jar_name }}" \
+            -out=tfplan \
+            -no-color 2>&1 | tee plan_output.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        working-directory: infrastructure/terraform
+
+      - name: Fail on plan error
+        if: steps.plan.outputs.exitcode == '1'
+        run: |
+          echo "Terraform plan failed. See output above."
+          exit 1
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: infrastructure/terraform
+
+      # Emit the API base URL to the Actions summary page for quick reference.
+      - name: Capture outputs
+        run: |
+          echo "## Dev Deployment Outputs" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          terraform output >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+        working-directory: infrastructure/terraform
+
+      # Smoke test: invoke the API with no token and expect a 401.
+      # A 401 confirms the Authorizer is live and rejecting unauthenticated requests.
+      # A 403 or 5xx indicates the deployment or Authorizer config is broken.
+      - name: Smoke test — unauthenticated request returns 401
+        run: |
+          BASE_URL=$(terraform output -raw api_base_url)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/items")
+          echo "Smoke test HTTP status: ${HTTP_STATUS}"
+          if [ "${HTTP_STATUS}" != "401" ]; then
+            echo "Expected 401 Unauthorized, got ${HTTP_STATUS}"
+            exit 1
+          fi
+          echo "Smoke test passed."
+        working-directory: infrastructure/terraform
+
+  # ── Job 3: Deploy to Prod ──────────────────────────────────────────────────
+  deploy-prod:
+    name: Deploy → prod
+    runs-on: ubuntu-latest
+    needs: [build, deploy-dev]          # Prod only runs after dev succeeds
+    environment: prod                   # GitHub "prod" environment — requires manual approval
+
+    env:
+      TF_VAR_FILE: environments/prod.tfvars
+      AWS_REGION: us-east-1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download shaded JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: authorizer-jar-${{ github.sha }}
+          path: authorizer-lambda/target
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-deploy-prod-${{ github.run_id }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.7"
+
+      - name: Terraform init
+        run: terraform init
+        working-directory: infrastructure/terraform
+
+      # In prod, the plan output is written to the Actions summary so the
+      # approver can review exactly what will change before approving.
+      - name: Terraform plan
+        id: plan
+        run: |
+          terraform plan \
+            -var-file="${{ env.TF_VAR_FILE }}" \
+            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.jar_name }}" \
+            -out=tfplan \
+            -no-color 2>&1 | tee plan_output.txt
+          echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+          echo "## Prod Terraform Plan" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat plan_output.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+        working-directory: infrastructure/terraform
+
+      - name: Fail on plan error
+        if: steps.plan.outputs.exitcode == '1'
+        run: |
+          echo "Terraform plan failed. See output above."
+          exit 1
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: infrastructure/terraform
+
+      - name: Capture outputs
+        run: |
+          echo "## Prod Deployment Outputs" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          terraform output >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+        working-directory: infrastructure/terraform
+
+      # Prod smoke test: same as dev — unauthenticated request must return 401.
+      - name: Smoke test — unauthenticated request returns 401
+        run: |
+          BASE_URL=$(terraform output -raw api_base_url)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/items")
+          echo "Smoke test HTTP status: ${HTTP_STATUS}"
+          if [ "${HTTP_STATUS}" != "401" ]; then
+            echo "Expected 401 Unauthorized, got ${HTTP_STATUS}"
+            exit 1
+          fi
+          echo "Smoke test passed."
+        working-directory: infrastructure/terraform
