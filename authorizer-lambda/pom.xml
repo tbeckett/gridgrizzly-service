@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        authorizer-lambda-pom.xml — JWT Authorizer Lambda module
+        ==========================================================
+        Location in repository: lambda-authorizer-service/authorizer-lambda/pom.xml
+
+        This module produces a deployable shaded fat JAR for the JWT Authorizer
+        Lambda function. The shade plugin bundles all runtime dependencies into a
+        single self-contained artifact that the Lambda runtime can execute without
+        a classpath.
+
+        Build output:
+          target/lambda-authorizer-1.0.0.jar  ← deployed to AWS Lambda
+
+        Lambda handler:
+          com.example.authorizer.LambdaAuthorizer::handleRequest
+
+        To build:
+          mvn clean package                   (from this directory)
+          mvn -pl authorizer-lambda package   (from the repository root)
+    -->
+
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>lambda-authorizer-service</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>lambda-authorizer</artifactId>
+    <packaging>jar</packaging>
+
+    <n>Authorizer Lambda — JWT Validation</n>
+    <description>
+        Deployable AWS Lambda function that validates Auth0 JWTs for API Gateway.
+        Produces a shaded fat JAR containing all runtime dependencies.
+    </description>
+
+    <dependencies>
+
+        <!-- Internal: shared POJOs and utilities -->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>common</artifactId>
+            <!-- Version resolved from parent dependencyManagement -->
+        </dependency>
+
+        <!-- AWS Lambda runtime — provided by the Lambda execution environment.
+             Declared as compile scope (not provided) because the shade plugin
+             must include it in the fat JAR. Lambda's built-in version may differ
+             from what we compile against; including it ensures consistency. -->
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+        </dependency>
+
+        <!-- Auth0 JWT validation -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+        </dependency>
+
+        <!-- Auth0 JWKS key provider with caching and rate limiting -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>jwks-rsa</artifactId>
+        </dependency>
+
+        <!-- SLF4J simple binding: writes to stdout → CloudWatch Logs.
+             Runtime-scoped in the sense that it is not needed by dependents,
+             but compile scope is required for the shade plugin to include it. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+
+            <!--
+                Shade plugin: activated only in this module.
+                Packages all runtime dependencies into a single fat JAR that
+                Lambda can execute. The parent's pluginManagement block provides
+                the version and the signature-stripping filter; only the execution
+                binding is declared here.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>shade-lambda-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

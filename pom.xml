@@ -5,103 +5,271 @@
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
-    <artifactId>lambda-authorizer</artifactId>
-    <version>1.0.0</version>
-    <packaging>jar</packaging>
+    <!--
+        parent-pom.xml — Root POM for lambda-authorizer-service
+        =========================================================
+        Location in repository: lambda-authorizer-service/pom.xml
 
+        This is the multi-module parent. It declares:
+          - All dependency versions in <dependencyManagement>
+          - All plugin versions and shared configuration in <pluginManagement>
+          - Common properties (Java version, encoding, etc.)
+          - The list of child modules
+
+        Child modules inherit this POM via <parent> and declare only the
+        dependencies they actually use — without version numbers, which are
+        resolved from this file's <dependencyManagement> block.
+
+        Child modules:
+          - common/            Shared library: POJOs, exceptions, utilities
+          - authorizer-lambda/ Deployable Lambda: JWT authoriser
+          - api-lambda/        Deployable Lambda: business logic (future)
+    -->
+
+    <groupId>com.example</groupId>
+    <artifactId>lambda-authorizer-service</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Lambda Authorizer Service — Parent</name>
+    <description>
+        Multi-module parent for the serverless REST API platform.
+        Manages dependency versions, plugin configuration, and build lifecycle
+        for all child modules.
+    </description>
+
+    <modules>
+        <module>common</module>
+        <module>authorizer-lambda</module>
+        <!-- <module>api-lambda</module> -->   <!-- Uncomment when the module is added -->
+    </modules>
+
+    <!-- ── Global properties ─────────────────────────────────────────────── -->
     <properties>
         <java.version>21</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <!-- Dependency versions -->
+        <!-- ── Dependency versions ──────────────────────────────────────── -->
+        <!-- AWS Lambda runtime -->
         <aws.lambda.core.version>1.2.3</aws.lambda.core.version>
         <aws.lambda.events.version>3.11.3</aws.lambda.events.version>
+
+        <!-- Auth0 -->
         <auth0.jwt.version>4.4.0</auth0.jwt.version>
         <auth0.jwks.version>0.22.1</auth0.jwks.version>
+
+        <!-- Logging -->
         <slf4j.version>2.0.12</slf4j.version>
+
+        <!-- Testing -->
         <junit.version>5.10.2</junit.version>
         <mockito.version>5.11.0</mockito.version>
+
+        <!-- ── Plugin versions ──────────────────────────────────────────── -->
+        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
+        <maven.shade.plugin.version>3.5.2</maven.shade.plugin.version>
+        <maven.enforcer.plugin.version>3.4.1</maven.enforcer.plugin.version>
+        <maven.checkstyle.plugin.version>3.3.1</maven.checkstyle.plugin.version>
+        <jacoco.plugin.version>0.8.11</jacoco.plugin.version>
     </properties>
 
-    <dependencies>
-        <!-- AWS Lambda runtime -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-core</artifactId>
-            <version>${aws.lambda.core.version}</version>
-        </dependency>
+    <!-- ── Dependency management ─────────────────────────────────────────── -->
+    <!--
+        Declares authoritative versions for every dependency used across all
+        modules. Child modules declare a <dependency> without a <version> tag
+        and Maven resolves it from here. This is the single source of truth
+        for all version numbers in the project.
+    -->
+    <dependencyManagement>
+        <dependencies>
 
-        <!-- API Gateway request/response types -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-lambda-java-events</artifactId>
-            <version>${aws.lambda.events.version}</version>
-        </dependency>
+            <!-- Internal modules: wire common into sibling modules -->
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-        <!-- Auth0 JWT validation -->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>${auth0.jwt.version}</version>
-        </dependency>
+            <!-- AWS Lambda runtime -->
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-lambda-java-core</artifactId>
+                <version>${aws.lambda.core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-lambda-java-events</artifactId>
+                <version>${aws.lambda.events.version}</version>
+            </dependency>
 
-        <!-- Auth0 JWKS RSA key provider -->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>jwks-rsa</artifactId>
-            <version>${auth0.jwks.version}</version>
-        </dependency>
+            <!-- Auth0 JWT validation -->
+            <dependency>
+                <groupId>com.auth0</groupId>
+                <artifactId>java-jwt</artifactId>
+                <version>${auth0.jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.auth0</groupId>
+                <artifactId>jwks-rsa</artifactId>
+                <version>${auth0.jwks.version}</version>
+            </dependency>
 
-        <!-- Logging (Lambda runtime uses SLF4J → CloudWatch Logs) -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
 
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+            <!-- Testing -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
 
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ── Plugin management ─────────────────────────────────────────────── -->
+    <!--
+        Declares plugin versions and shared configuration. Child modules that
+        use a plugin listed here inherit its version and configuration without
+        repeating it. The shade plugin is declared here but only activated in
+        the authorizer-lambda and api-lambda modules via <executions>.
+    -->
     <build>
-        <plugins>
-            <!-- Shade plugin: packages all dependencies into a single deployable JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.2</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+        <pluginManagement>
+            <plugins>
 
+                <!-- Compiler: enforce Java 21, enable preview features opt-in -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <encoding>UTF-8</encoding>
+                        <!-- Emit parameter names into bytecode for cleaner reflection-based frameworks -->
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+
+                <!-- Surefire: run JUnit 5 tests -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                    <configuration>
+                        <!-- Emit XML reports consumed by CI test result publishers -->
+                        <reportFormat>xml</reportFormat>
+                        <trimStackTrace>false</trimStackTrace>
+                    </configuration>
+                </plugin>
+
+                <!-- Shade: package deployable fat JARs for Lambda modules -->
+                <!-- Activated per-module via <executions> — not applied globally -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <filters>
+                            <filter>
+                                <!-- Strip signature files from dependencies to prevent
+                                     SecurityException on Lambda startup -->
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                    </configuration>
+                </plugin>
+
+                <!-- Enforcer: fail the build if minimum Maven or Java version is not met -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven.enforcer.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-versions</id>
+                            <goals><goal>enforce</goal></goals>
+                            <configuration>
+                                <rules>
+                                    <requireMavenVersion>
+                                        <version>[3.9,)</version>
+                                        <message>Maven 3.9 or later is required.</message>
+                                    </requireMavenVersion>
+                                    <requireJavaVersion>
+                                        <version>[21,)</version>
+                                        <message>Java 21 or later is required.</message>
+                                    </requireJavaVersion>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- JaCoCo: code coverage for all modules -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals><goal>prepare-agent</goal></goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals><goal>report</goal></goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <!-- Plugins applied to ALL modules (not just declared in management) -->
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
+
 </project>

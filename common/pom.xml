@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        common-pom.xml — Shared library module
+        ========================================
+        Location in repository: lambda-authorizer-service/common/pom.xml
+
+        This module is a plain JAR — not a deployable Lambda fat JAR.
+        It contains code shared between Lambda modules:
+          - Request/response POJOs
+          - Domain exception types
+          - Utility classes with no Lambda or AWS SDK dependency
+
+        Intentionally lean: this module must not depend on aws-lambda-java-core,
+        aws-lambda-java-events, or any Auth0 library. Those are Lambda-specific
+        concerns that belong in the modules that deploy to Lambda.
+
+        Sibling modules declare a dependency on this artifact:
+          <dependency>
+              <groupId>com.example</groupId>
+              <artifactId>common</artifactId>
+          </dependency>
+        The version is resolved from the parent's <dependencyManagement>.
+    -->
+
+    <parent>
+        <groupId>com.example</groupId>
+        <artifactId>lambda-authorizer-service</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>common</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Common — Shared Library</name>
+    <description>
+        Shared POJOs, domain exceptions, and utility classes used across Lambda modules.
+        Has no dependency on the AWS Lambda runtime or Auth0 libraries.
+    </description>
+
+    <dependencies>
+
+        <!--
+            SLF4J API only — no binding.
+            The binding (slf4j-simple) is provided at runtime by whichever
+            Lambda module depends on common. Declaring the binding here would
+            cause a duplicate binding conflict when Lambda modules shade this
+            artifact into their fat JARs.
+        -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <!-- Version resolved from parent dependencyManagement -->
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--
+                Compiler and Surefire are declared in parent pluginManagement
+                and activated here by reference — no version or configuration
+                needed. Maven resolves them from the parent.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+
+            <!--
+                No shade plugin here. common is a plain JAR consumed as a
+                library dependency by Lambda modules. Those modules shade it
+                into their own fat JARs during their own package phase.
+            -->
+
+        </plugins>
+    </build>
+
+</project>
