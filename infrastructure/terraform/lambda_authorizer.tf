@@ -13,7 +13,7 @@ resource "aws_lambda_function" "authorizer" {
   source_code_hash = filebase64sha256(var.lambda_jar_path)
 
   # Fully-qualified handler: package.ClassName::methodName
-  handler = "com.example.authorizer.LambdaAuthorizer::handleRequest"
+  handler = "com.gridgrizzly.authorizer.LambdaAuthorizer::handleRequest"
 
   # Java 21 Corretto runtime. Update this value as new managed runtimes are released.
   runtime = "java21"
@@ -117,7 +117,7 @@ resource "aws_security_group" "authorizer_lambda" {
 
   # Outbound: HTTPS to Auth0 JWKS endpoint (443) and AWS services via VPC endpoints.
   egress {
-    description = "HTTPS outbound — Auth0 JWKS endpoint and AWS service endpoints"
+    description = "HTTPS outbound - Auth0 JWKS endpoint and AWS service endpoints"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
