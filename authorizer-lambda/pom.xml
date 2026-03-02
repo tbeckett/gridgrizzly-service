@@ -45,11 +45,11 @@
     <dependencies>
 
         <!-- Internal: shared POJOs and utilities -->
-        <dependency>
-            <groupId>com.gridgrizzly</groupId>
-            <artifactId>common</artifactId>
-            <!-- Version resolved from parent dependencyManagement -->
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.gridgrizzly</groupId>-->
+<!--            <artifactId>common</artifactId>-->
+<!--            &lt;!&ndash; Version resolved from parent dependencyManagement &ndash;&gt;-->
+<!--        </dependency>-->
 
         <!-- AWS Lambda runtime — provided by the Lambda execution environment.
              Declared as compile scope (not provided) because the shade plugin
