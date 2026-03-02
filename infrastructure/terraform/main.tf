@@ -26,8 +26,7 @@ terraform {
     bucket         = "gridgrizzly-terraform-state-us-east-1"
     key            = "lambda-authorizer-service/terraform.tfstate"
     region         = "us-east-1"
-    use_lockfile   = true
-    # dynamodb_table   = "gridgrizzly-terraform-locks"
+    dynamodb_table   = "gridgrizzly-terraform-locks"
     encrypt        = true
   }
 }
