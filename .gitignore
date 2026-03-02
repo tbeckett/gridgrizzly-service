@@ -4,3 +4,4 @@
 
 
 */target/
+/infrastructure/terraform/.terraform/
