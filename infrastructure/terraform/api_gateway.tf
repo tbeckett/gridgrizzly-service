@@ -127,14 +127,9 @@ resource "aws_api_gateway_stage" "main" {
     })
   }
 
- dynamic "tracing_config" {
-   for_each = var.xray_tracing_enabled ? [1] : []
-   content {
-     # "Active" sampling traces every request. Switch to "PassThrough" at high
-     # volume to use X-Ray sampling rules and reduce tracing cost.
-     xray_tracing_enabled = true
-   }
- }
+  # "Active" sampling traces every request. Switch to false at high volume and
+  # rely on X-Ray sampling rules to reduce tracing cost.
+  xray_tracing_enabled = var.xray_tracing_enabled
 
   tags = {
     Name = "${var.environment}-api-stage-${var.api_stage_name}"
