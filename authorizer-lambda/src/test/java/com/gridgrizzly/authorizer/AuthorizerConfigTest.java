@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthorizerConfigTest {
 
     // DO NOT use a "/" at the end of the DOMAIN string
-    private static final String DOMAIN   = "my-tenant.us.auth0.com";
-    private static final String AUDIENCE = "https://api.myapp.com";
+    private static final String DOMAIN   = "auth.gridgrizzly.com";
+    private static final String AUDIENCE = "https://api.gridgrizzly.com";
 
     // ─────────────────────────────────────────────────────────────────────────
     // Record constructor — field access
@@ -95,7 +95,7 @@ class AuthorizerConfigTest {
 
         // issuer() should be "https://my-tenant.us.auth0.com/" — not double-slashed
         assertEquals("https://" + DOMAIN + "/", config.issuer());
-        assertFalse(config.issuer().contains("//my-tenant"),
+        assertFalse(config.issuer().endsWith("//"),
             "Domain trailing slash must be stripped before constructing the issuer URL");
     }
 

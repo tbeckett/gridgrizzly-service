@@ -48,37 +48,28 @@ public class LambdaAuthorizer
 
     private static final Logger log = LoggerFactory.getLogger(LambdaAuthorizer.class);
 
-    // ── Static singletons — initialised once at cold start ───────────────────
-    private static final AuthorizerConfig        STATIC_CONFIG;
-    private static final CachingJwksKeyProvider  STATIC_JWKS;
-
-    static {
-        log.info("Lambda Authorizer cold start — initialising config and JWKS provider");
-        STATIC_CONFIG = AuthorizerConfig.fromEnvironment();
-        try {
-            STATIC_JWKS = new CachingJwksKeyProvider(STATIC_CONFIG);
-        } catch (MalformedURLException mue) {
-            throw new RuntimeException("Failed to create CachingJwksKeyProvider instance in static block.", mue);
-        }
-        log.info("Initialisation complete. Issuer={}, Audience={}",
-                STATIC_CONFIG.issuer(), STATIC_CONFIG.auth0Audience());
-    }
-
-    // ── Instance fields — support both production and test paths ─────────────
-    private final AuthorizerConfig       config;
-    private final CachingJwksKeyProvider jwksProvider;
+    // ── Instance fields — initialised once at cold start, reused on warm invocations ──
+    private final AuthorizerConfig config;
+    private final JwksKeyProvider  jwksProvider;
 
     /** Production constructor — used by the Lambda runtime. */
     public LambdaAuthorizer() {
-        this.config       = STATIC_CONFIG;
-        this.jwksProvider = STATIC_JWKS;
+        log.info("Lambda Authorizer cold start — initialising config and JWKS provider");
+        this.config = AuthorizerConfig.fromEnvironment();
+        try {
+            this.jwksProvider = new CachingJwksKeyProvider(this.config);
+        } catch (MalformedURLException mue) {
+            throw new RuntimeException("Failed to create CachingJwksKeyProvider.", mue);
+        }
+        log.info("Initialisation complete. Issuer={}, Audience={}",
+                this.config.issuer(), this.config.auth0Audience());
     }
 
     /**
      * Package-private constructor for unit testing.
      * Allows injection of mock collaborators without an env-var dependency.
      */
-    LambdaAuthorizer(AuthorizerConfig config, CachingJwksKeyProvider jwksProvider) {
+    LambdaAuthorizer(AuthorizerConfig config, JwksKeyProvider jwksProvider) {
         this.config       = config;
         this.jwksProvider = jwksProvider;
     }

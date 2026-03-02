@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * across warm Lambda invocations. Because Lambda single-threads each
  * execution environment, no additional synchronisation is required.
  */
-public final class CachingJwksKeyProvider {
+public final class CachingJwksKeyProvider implements JwksKeyProvider {
 
     private static final Logger log = LoggerFactory.getLogger(CachingJwksKeyProvider.class);
 

@@ -17,7 +17,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import com.auth0.jwt.JWT;
@@ -41,7 +40,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LambdaAuthorizerTest {
 
-    private static final String TEST_DOMAIN = "test-tenant.auth0.com";
+    private static final String TEST_DOMAIN = "auth.test.com";
     private static final String TEST_AUDIENCE = "https://api.test.com";
     private static final String TEST_USER_ID = "auth0|user-abc-123";
     private static final String TEST_KID = "test-key-id-001";
@@ -52,7 +51,7 @@ class LambdaAuthorizerTest {
     private Algorithm algorithm;
 
     @Mock
-    private CachingJwksKeyProvider mockKeyProvider;
+    private JwksKeyProvider mockKeyProvider;
 
     @Mock
     private Context mockContext;
@@ -90,9 +89,9 @@ class LambdaAuthorizerTest {
         assertNotNull(doc);
 
         @SuppressWarnings("unchecked")
-        List<IamPolicyResponse.Statement> statements = (List<IamPolicyResponse.Statement>) doc.get("Statement");
-        assertEquals(1, statements.size());
-        assertEquals(IamPolicyResponse.ALLOW, statements.getFirst().getEffect());
+        Map<String, Object>[] statements = (Map<String, Object>[]) doc.get("Statement");
+        assertEquals(1, statements.length);
+        assertEquals(IamPolicyResponse.ALLOW, statements[0].get("Effect"));
 
         assertEquals(TEST_USER_ID, response.getContext().get("userId"));
     }

@@ -4,7 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.IamPolicyResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,34 +65,32 @@ class PolicyBuilderTest {
     @DisplayName("Allow — exactly one statement is present")
     void allow_exactlyOneStatement() {
         IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        List<?> statements = (List<?>) response.getPolicyDocument().get("Statement");
+        Map<?, ?>[] statements = (Map<?, ?>[]) response.getPolicyDocument().get("Statement");
         assertNotNull(statements);
-        assertEquals(1, statements.size());
+        assertEquals(1, statements.length);
     }
 
     @Test
     @DisplayName("Allow — effect is Allow")
     void allow_effectIsAllow() {
-        IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        IamPolicyResponse.Statement stmt = firstStatement(response);
-        assertEquals(IamPolicyResponse.ALLOW, stmt.getEffect());
+        Map<String, Object> stmt = firstStatement(PolicyBuilder.allow(USER_ID, METHOD_ARN));
+        assertEquals(IamPolicyResponse.ALLOW, stmt.get("Effect"));
     }
 
     @Test
     @DisplayName("Allow — action is execute-api:Invoke")
     void allow_actionIsInvoke() {
-        IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        IamPolicyResponse.Statement stmt = firstStatement(response);
-        assertTrue(stmt.getAction().contains("execute-api:Invoke"));
+        Map<String, Object> stmt = firstStatement(PolicyBuilder.allow(USER_ID, METHOD_ARN));
+        assertEquals("execute-api:Invoke", stmt.get("Action"));
     }
 
     @Test
     @DisplayName("Allow — resource is wildcard ARN (covers full API surface for cached response)")
     void allow_resourceIsWildcard() {
-        IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        IamPolicyResponse.Statement stmt = firstStatement(response);
+        Map<String, Object> stmt = firstStatement(PolicyBuilder.allow(USER_ID, METHOD_ARN));
+        String[] resources = (String[]) stmt.get("Resource");
         assertTrue(
-            stmt.getResource().contains("arn:aws:execute-api:*:*:*"),
+            Arrays.asList(resources).contains("arn:aws:execute-api:*:*:*"),
             "Allow policy should use wildcard resource so cached Authorizer response covers all methods"
         );
     }
@@ -121,9 +119,8 @@ class PolicyBuilderTest {
     @Test
     @DisplayName("Deny — effect is Deny")
     void deny_effectIsDeny() {
-        IamPolicyResponse response = PolicyBuilder.deny(METHOD_ARN);
-        IamPolicyResponse.Statement stmt = firstStatement(response);
-        assertEquals(IamPolicyResponse.DENY, stmt.getEffect());
+        Map<String, Object> stmt = firstStatement(PolicyBuilder.deny(METHOD_ARN));
+        assertEquals(IamPolicyResponse.DENY, stmt.get("Effect"));
     }
 
     @Test
@@ -144,17 +141,16 @@ class PolicyBuilderTest {
     @DisplayName("Deny — exactly one statement is present")
     void deny_exactlyOneStatement() {
         IamPolicyResponse response = PolicyBuilder.deny(METHOD_ARN);
-        List<?> statements = (List<?>) response.getPolicyDocument().get("Statement");
+        Map<?, ?>[] statements = (Map<?, ?>[]) response.getPolicyDocument().get("Statement");
         assertNotNull(statements);
-        assertEquals(1, statements.size());
+        assertEquals(1, statements.length);
     }
 
     @Test
     @DisplayName("Deny — action is execute-api:Invoke")
     void deny_actionIsInvoke() {
-        IamPolicyResponse response = PolicyBuilder.deny(METHOD_ARN);
-        IamPolicyResponse.Statement stmt = firstStatement(response);
-        assertTrue(stmt.getAction().contains("execute-api:Invoke"));
+        Map<String, Object> stmt = firstStatement(PolicyBuilder.deny(METHOD_ARN));
+        assertEquals("execute-api:Invoke", stmt.get("Action"));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -164,12 +160,9 @@ class PolicyBuilderTest {
     @Test
     @DisplayName("Allow and Deny produce different effects for the same ARN")
     void allowAndDeny_produceDifferentEffects() {
-        IamPolicyResponse allow = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        IamPolicyResponse deny  = PolicyBuilder.deny(METHOD_ARN);
-
         assertNotEquals(
-            firstStatement(allow).getEffect(),
-            firstStatement(deny).getEffect()
+            firstStatement(PolicyBuilder.allow(USER_ID, METHOD_ARN)).get("Effect"),
+            firstStatement(PolicyBuilder.deny(METHOD_ARN)).get("Effect")
         );
     }
 
@@ -178,10 +171,8 @@ class PolicyBuilderTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @SuppressWarnings("unchecked")
-    private IamPolicyResponse.Statement firstStatement(IamPolicyResponse response) {
-        Map<String, Object> doc = response.getPolicyDocument();
-        List<IamPolicyResponse.Statement> statements =
-                (List<IamPolicyResponse.Statement>) doc.get("Statement");
-        return statements.getFirst();
+    private Map<String, Object> firstStatement(IamPolicyResponse response) {
+        Map<String, Object>[] statements = (Map<String, Object>[]) response.getPolicyDocument().get("Statement");
+        return statements[0];
     }
 }
