@@ -35,7 +35,6 @@ provider "aws" {
   region = var.aws_region
 
   shared_config_files      = ["~/.aws/conf"]
-  profile = "dev"
 
   default_tags {
     tags = {
