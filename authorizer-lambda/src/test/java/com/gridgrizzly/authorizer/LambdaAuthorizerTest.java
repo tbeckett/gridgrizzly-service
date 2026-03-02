@@ -186,7 +186,7 @@ class LambdaAuthorizerTest {
 
     @Test
     @DisplayName("JWT missing kid header → Unauthorized")
-    void missingKid_throwsUnauthorized() throws Exception {
+    void missingKid_throwsUnauthorized() {
         String token = JWT.create()
                 // deliberately omit withKeyId()
                 .withIssuer(config.issuer())
