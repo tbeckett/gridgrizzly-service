@@ -113,12 +113,6 @@ resource "aws_api_gateway_stage" "main" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = var.api_stage_name
 
-  # Stage-level throttle defaults. Per-method overrides can be added via
-  # aws_api_gateway_method_settings if individual endpoints need different limits.
-  default_route_settings {
-    # These are set via method_settings below; defaults require method settings resource.
-  }
-
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_access.arn
     format = jsonencode({
@@ -133,14 +127,14 @@ resource "aws_api_gateway_stage" "main" {
     })
   }
 
-  dynamic "tracing_config" {
-    for_each = var.xray_tracing_enabled ? [1] : []
-    content {
-      # "Active" sampling traces every request. Switch to "PassThrough" at high
-      # volume to use X-Ray sampling rules and reduce tracing cost.
-      mode = "Active"
-    }
-  }
+ dynamic "tracing_config" {
+   for_each = var.xray_tracing_enabled ? [1] : []
+   content {
+     # "Active" sampling traces every request. Switch to "PassThrough" at high
+     # volume to use X-Ray sampling rules and reduce tracing cost.
+     xray_tracing_enabled= true;
+   }
+ }
 
   tags = {
     Name = "${var.environment}-api-stage-${var.api_stage_name}"
