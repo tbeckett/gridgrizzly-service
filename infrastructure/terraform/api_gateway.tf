@@ -132,7 +132,7 @@ resource "aws_api_gateway_stage" "main" {
    content {
      # "Active" sampling traces every request. Switch to "PassThrough" at high
      # volume to use X-Ray sampling rules and reduce tracing cost.
-     xray_tracing_enabled= true;
+     xray_tracing_enabled = true
    }
  }
 
