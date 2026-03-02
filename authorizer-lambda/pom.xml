@@ -27,7 +27,7 @@
     -->
 
     <parent>
-        <groupId>com.example</groupId>
+        <groupId>com.gridgrizzly</groupId>
         <artifactId>lambda-authorizer-service</artifactId>
         <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
@@ -36,7 +36,7 @@
     <artifactId>lambda-authorizer</artifactId>
     <packaging>jar</packaging>
 
-    <n>Authorizer Lambda — JWT Validation</n>
+    <name>Authorizer Lambda — JWT Validation</name>
     <description>
         Deployable AWS Lambda function that validates Auth0 JWTs for API Gateway.
         Produces a shaded fat JAR containing all runtime dependencies.
@@ -46,7 +46,7 @@
 
         <!-- Internal: shared POJOs and utilities -->
         <dependency>
-            <groupId>com.example</groupId>
+            <groupId>com.gridgrizzly</groupId>
             <artifactId>common</artifactId>
             <!-- Version resolved from parent dependencyManagement -->
         </dependency>

@@ -1,4 +1,4 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 import com.amazonaws.services.lambda.runtime.events.IamPolicyResponse;
 
@@ -7,11 +7,11 @@ import java.util.Map;
 
 /**
  * Builds IAM policy documents that API Gateway evaluates to allow or deny access.
- *
+ * <p/>
  * Policy design
  * ─────────────
  * API Gateway requires the Authorizer to return a policy in the following form:
- *
+ * <p/>
  *   {
  *     "principalId": "<userId>",
  *     "policyDocument": {
@@ -21,12 +21,12 @@ import java.util.Map;
  *     },
  *     "context": { "userId": "<userId>" }  // ← injected into downstream Lambda context
  *   }
- *
+ * <p/>
  * The "context" map is the mechanism by which the verified userId is passed to
  * business logic Lambda functions. Downstream code reads:
- *
+ * <p/>
  *   event.getRequestContext().getAuthorizer().get("userId")
- *
+ * <p/>
  * The resource ARN is set to a wildcard ("arn:aws:execute-api:*:*:*") so that
  * a single cached Authorizer response covers all methods and stages for a given token.
  * If finer-grained method-level control is needed, pass the specific methodArn instead.

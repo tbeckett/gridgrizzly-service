@@ -14,8 +14,8 @@ environment    = "dev"
 aws_region     = "us-east-1"
 
 # Auth0 — dev tenant
-auth0_domain   = "my-org-dev.us.auth0.com"
-auth0_audience = "https://api.dev.myapp.com"
+auth0_domain   = "auth0.gridgrizzly.com"
+auth0_audience = "https://api.gridgrizzly.com"
 
 # Lambda
 lambda_jar_path            = "../../authorizer-lambda/target/lambda-authorizer-1.0.0.jar"
@@ -33,8 +33,8 @@ dynamodb_table_name  = "dev-app-data"
 dynamodb_enable_dax  = false   # DAX off in dev
 
 # Networking — replace with actual VPC/subnet IDs from your dev account
-vpc_id             = "vpc-0abc1234dev00000"
-private_subnet_ids = ["subnet-0abc1234dev00001", "subnet-0abc1234dev00002"]
+vpc_id             = "vpc-0b53f2432a066aeda"
+private_subnet_ids = ["subnet-0dbb14f9c04f9678f", "subnet-0de603c248d1996cc"]
 
 # Observability
 log_retention_days   = 7      # Short retention in dev

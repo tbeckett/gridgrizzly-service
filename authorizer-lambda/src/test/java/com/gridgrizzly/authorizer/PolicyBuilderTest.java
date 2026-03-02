@@ -1,16 +1,17 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 import com.amazonaws.services.lambda.runtime.events.IamPolicyResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link PolicyBuilder}.
- *
+ * <p/>
  * PolicyBuilder is a pure function — no mocks or external dependencies needed.
  * Every test constructs a response and asserts on the exact shape that
  * API Gateway requires to evaluate the policy correctly.
@@ -57,14 +58,14 @@ class PolicyBuilderTest {
     @DisplayName("Allow — policy version is 2012-10-17")
     void allow_policyVersionIsCorrect() {
         IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        assertEquals("2012-10-17", response.getPolicyDocument().getVersion());
+        assertEquals("2012-10-17", response.getPolicyDocument().get("Version"));
     }
 
     @Test
     @DisplayName("Allow — exactly one statement is present")
     void allow_exactlyOneStatement() {
         IamPolicyResponse response = PolicyBuilder.allow(USER_ID, METHOD_ARN);
-        List<?> statements = response.getPolicyDocument().getStatement();
+        List<?> statements = (List<?>) response.getPolicyDocument().get("Statement");
         assertNotNull(statements);
         assertEquals(1, statements.size());
     }
@@ -136,14 +137,14 @@ class PolicyBuilderTest {
     @DisplayName("Deny — policy version is 2012-10-17")
     void deny_policyVersionIsCorrect() {
         IamPolicyResponse response = PolicyBuilder.deny(METHOD_ARN);
-        assertEquals("2012-10-17", response.getPolicyDocument().getVersion());
+        assertEquals("2012-10-17", response.getPolicyDocument().get("Version"));
     }
 
     @Test
     @DisplayName("Deny — exactly one statement is present")
     void deny_exactlyOneStatement() {
         IamPolicyResponse response = PolicyBuilder.deny(METHOD_ARN);
-        List<?> statements = response.getPolicyDocument().getStatement();
+        List<?> statements = (List<?>) response.getPolicyDocument().get("Statement");
         assertNotNull(statements);
         assertEquals(1, statements.size());
     }
@@ -176,7 +177,11 @@ class PolicyBuilderTest {
     // Helper
     // ─────────────────────────────────────────────────────────────────────────
 
+    @SuppressWarnings("unchecked")
     private IamPolicyResponse.Statement firstStatement(IamPolicyResponse response) {
-        return response.getPolicyDocument().getStatement().get(0);
+        Map<String, Object> doc = response.getPolicyDocument();
+        List<IamPolicyResponse.Statement> statements =
+                (List<IamPolicyResponse.Statement>) doc.get("Statement");
+        return statements.getFirst();
     }
 }

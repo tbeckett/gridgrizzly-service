@@ -29,7 +29,7 @@
     -->
 
     <parent>
-        <groupId>com.example</groupId>
+        <groupId>com.gridgrizzly</groupId>
         <artifactId>lambda-authorizer-service</artifactId>
         <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>

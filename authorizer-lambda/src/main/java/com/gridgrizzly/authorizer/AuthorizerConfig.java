@@ -1,10 +1,10 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 /**
  * Reads and validates all configuration from environment variables at cold-start time.
  * Failing fast here surfaces misconfiguration in Lambda logs immediately rather than
  * on the first live request.
- *
+ * <p/>
  * Required environment variables:
  *   AUTH0_DOMAIN   - e.g. "your-tenant.us.auth0.com"
  *   AUTH0_AUDIENCE - e.g. "https://api.yourapp.com"

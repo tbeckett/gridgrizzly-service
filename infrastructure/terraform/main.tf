@@ -23,16 +23,20 @@ terraform {
   # before running terraform init for the first time.
   # The bucket and table names follow the pattern: <org>-terraform-state-<region>
   backend "s3" {
-    bucket         = "my-org-terraform-state-us-east-1"
+    bucket         = "gridgrizzly-terraform-state-us-east-1"
     key            = "lambda-authorizer-service/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "my-org-terraform-locks"
+    use_lockfile   = true
+    # dynamodb_table   = "gridgrizzly-terraform-locks"
     encrypt        = true
   }
 }
 
 provider "aws" {
   region = var.aws_region
+
+  shared_config_files      = ["~/.aws/conf"]
+  profile = "dev"
 
   default_tags {
     tags = {

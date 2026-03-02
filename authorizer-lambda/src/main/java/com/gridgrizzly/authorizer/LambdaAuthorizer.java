@@ -1,4 +1,4 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -12,11 +12,12 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
 import java.security.interfaces.RSAPublicKey;
 
 /**
  * AWS Lambda Authorizer for API Gateway.
- *
+ * <p/>
  * Invocation flow
  * ───────────────
  * 1. API Gateway receives a request with an "Authorization: Bearer <token>" header.
@@ -24,23 +25,23 @@ import java.security.interfaces.RSAPublicKey;
  * 3. This handler validates the JWT against Auth0's JWKS public keys.
  * 4. On success → returns an Allow IAM policy with the userId in the context map.
  *    On failure → throws RuntimeException("Unauthorized") which API Gateway maps to 401.
- *
- * Cold-start vs warm invocation
+ * <p/>
+ * Cold-start vs. warm invocation
  * ─────────────────────────────
  * The static initialiser block runs once per execution environment (cold start).
  * It reads environment variables, constructs the config, and creates the JWKS
  * key provider with its in-memory cache. All subsequent warm invocations reuse
  * these static instances — no re-initialisation or network calls until the
  * JWKS cache TTL expires (10 minutes).
- *
+ * <p/>
  * Lambda handler configuration
  * ─────────────────────────────
  * Set the Lambda handler to:
  *   com.example.authorizer.LambdaAuthorizer::handleRequest
- *
+ * <p/>
  * Required environment variables:
  *   AUTH0_DOMAIN   - your Auth0 tenant domain, e.g. "your-tenant.us.auth0.com"
- *   AUTH0_AUDIENCE - the API identifier registered in Auth0, e.g. "https://api.yourapp.com"
+ *   AUTH0_AUDIENCE - the API identifier registered in Auth0, e.g. <a href="https://api.yourapp.com">https://api.yourapp.com</a>
  */
 public class LambdaAuthorizer
         implements RequestHandler<APIGatewayCustomAuthorizerEvent, IamPolicyResponse> {
@@ -54,7 +55,11 @@ public class LambdaAuthorizer
     static {
         log.info("Lambda Authorizer cold start — initialising config and JWKS provider");
         STATIC_CONFIG = AuthorizerConfig.fromEnvironment();
-        STATIC_JWKS   = new CachingJwksKeyProvider(STATIC_CONFIG);
+        try {
+            STATIC_JWKS = new CachingJwksKeyProvider(STATIC_CONFIG);
+        } catch (MalformedURLException mue) {
+            throw new RuntimeException("Failed to create CachingJwksKeyProvider instance in static block.", mue);
+        }
         log.info("Initialisation complete. Issuer={}, Audience={}",
                 STATIC_CONFIG.issuer(), STATIC_CONFIG.auth0Audience());
     }
@@ -141,7 +146,7 @@ public class LambdaAuthorizer
 
     /**
      * Validates the JWT and returns the verified userId.
-     *
+     * <p/>
      * Validation steps performed by the Auth0 java-jwt library:
      *   1. Decode the token and extract the "kid" (key ID) from the header.
      *   2. Fetch the matching RSA public key from the JWKS provider (cached).
@@ -149,7 +154,7 @@ public class LambdaAuthorizer
      *   4. Verify "iss" (issuer) matches the configured Auth0 domain.
      *   5. Verify "aud" (audience) contains the configured API identifier.
      *   6. Verify "exp" (expiry) has not passed.
-     *
+     * <p/>
      * @param token the raw JWT string extracted from the Authorization header
      * @return the "sub" claim value — the unique userId from Auth0
      * @throws Exception on any validation failure or key-fetch error

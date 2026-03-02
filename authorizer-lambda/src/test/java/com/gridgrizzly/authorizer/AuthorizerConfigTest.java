@@ -1,4 +1,4 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for {@link AuthorizerConfig}.
- *
+ * <p/>
  * AuthorizerConfig reads from environment variables, which cannot be set from
  * within a running JVM. Tests therefore exercise the record constructor directly
  * to validate derived values (issuer URL, JWKS URI), and verify that
@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AuthorizerConfigTest {
 
+    // DO NOT use a "/" at the end of the DOMAIN string
     private static final String DOMAIN   = "my-tenant.us.auth0.com";
     private static final String AUDIENCE = "https://api.myapp.com";
 
@@ -90,15 +91,7 @@ class AuthorizerConfigTest {
         // We cannot set env vars at runtime, so we test the stripping logic
         // directly via the static helper used by fromEnvironment() by verifying
         // that a config built with a slash-suffixed domain produces a clean issuer.
-        //
-        // The trailing-slash strip is applied before the record is constructed,
-        // so we simulate it manually here and assert on the issuer output.
-        String domainWithSlash = DOMAIN + "/";
-        String stripped = domainWithSlash.endsWith("/")
-                ? domainWithSlash.substring(0, domainWithSlash.length() - 1)
-                : domainWithSlash;
-
-        var config = new AuthorizerConfig(stripped, AUDIENCE, buildJwksUri(stripped));
+        var config = new AuthorizerConfig(DOMAIN, AUDIENCE, buildJwksUri(DOMAIN));
 
         // issuer() should be "https://my-tenant.us.auth0.com/" — not double-slashed
         assertEquals("https://" + DOMAIN + "/", config.issuer());

@@ -1,4 +1,4 @@
-package com.example.authorizer;
+package com.gridgrizzly.authorizer;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayCustomAuthorizerEvent;
@@ -17,6 +17,8 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -26,11 +28,11 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the Lambda Authorizer.
- *
+ * <p>
  * Strategy: we test the validation logic directly by injecting a mock
  * CachingJwksKeyProvider and constructing real signed JWTs in-process
  * using a locally generated RSA key pair. No network calls are made.
- *
+ * <p>
  * The LambdaAuthorizer class uses static initialisation that reads env vars,
  * so we test the validation logic via a package-private constructor that
  * accepts explicit collaborators (config + key provider). This follows the
@@ -39,15 +41,15 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LambdaAuthorizerTest {
 
-    private static final String TEST_DOMAIN   = "test-tenant.auth0.com";
+    private static final String TEST_DOMAIN = "test-tenant.auth0.com";
     private static final String TEST_AUDIENCE = "https://api.test.com";
-    private static final String TEST_USER_ID  = "auth0|user-abc-123";
-    private static final String TEST_KID      = "test-key-id-001";
-    private static final String TEST_METHOD   = "arn:aws:execute-api:us-east-1:123:abc/prod/GET/items";
+    private static final String TEST_USER_ID = "auth0|user-abc-123";
+    private static final String TEST_KID = "test-key-id-001";
+    private static final String TEST_METHOD = "arn:aws:execute-api:us-east-1:123:abc/prod/GET/items";
 
-    private RSAPublicKey  publicKey;
+    private RSAPublicKey publicKey;
     private RSAPrivateKey privateKey;
-    private Algorithm     algorithm;
+    private Algorithm algorithm;
 
     @Mock
     private CachingJwksKeyProvider mockKeyProvider;
@@ -63,9 +65,9 @@ class LambdaAuthorizerTest {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
         gen.initialize(2048);
         KeyPair kp = gen.generateKeyPair();
-        publicKey  = (RSAPublicKey)  kp.getPublic();
+        publicKey = (RSAPublicKey) kp.getPublic();
         privateKey = (RSAPrivateKey) kp.getPrivate();
-        algorithm  = Algorithm.RSA256(publicKey, privateKey);
+        algorithm = Algorithm.RSA256(publicKey, privateKey);
 
         config = new AuthorizerConfig(TEST_DOMAIN, TEST_AUDIENCE,
                 "https://" + TEST_DOMAIN + "/.well-known/jwks.json");
@@ -82,13 +84,15 @@ class LambdaAuthorizerTest {
         when(mockKeyProvider.getPublicKey(TEST_KID)).thenReturn(publicKey);
 
         IamPolicyResponse response = invokeAuthorizer("Bearer " + token);
+        Map<String, Object> doc = response.getPolicyDocument();
 
         assertEquals(TEST_USER_ID, response.getPrincipalId());
-        assertNotNull(response.getPolicyDocument());
+        assertNotNull(doc);
 
-        var statements = response.getPolicyDocument().getStatement();
+        @SuppressWarnings("unchecked")
+        List<IamPolicyResponse.Statement> statements = (List<IamPolicyResponse.Statement>) doc.get("Statement");
         assertEquals(1, statements.size());
-        assertEquals(IamPolicyResponse.ALLOW, statements.get(0).getEffect());
+        assertEquals(IamPolicyResponse.ALLOW, statements.getFirst().getEffect());
 
         assertEquals(TEST_USER_ID, response.getContext().get("userId"));
     }
@@ -229,7 +233,7 @@ class LambdaAuthorizerTest {
     }
 
     private IamPolicyResponse invokeAuthorizer(String authHeader) {
-        var event      = buildEvent(authHeader);
+        var event = buildEvent(authHeader);
         var authorizer = new LambdaAuthorizer(config, mockKeyProvider);
         return authorizer.handleRequest(event, mockContext);
     }

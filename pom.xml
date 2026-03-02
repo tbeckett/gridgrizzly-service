@@ -26,7 +26,7 @@
           - api-lambda/        Deployable Lambda: business logic (future)
     -->
 
-    <groupId>com.example</groupId>
+    <groupId>com.gridgrizzly</groupId>
     <artifactId>lambda-authorizer-service</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
@@ -89,7 +89,7 @@
 
             <!-- Internal modules: wire common into sibling modules -->
             <dependency>
-                <groupId>com.example</groupId>
+                <groupId>com.gridgrizzly</groupId>
                 <artifactId>common</artifactId>
                 <version>${project.version}</version>
             </dependency>
