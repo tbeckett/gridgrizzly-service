@@ -127,8 +127,8 @@ jobs:
         with:
           terraform_version: "~> 1.7"
 
-      - name: Terraform init -backend-config="bucket=${{ vars.BUCKET }}"
-        run: terraform init
+      - name: Terraform init
+        run: terraform init -backend-config="bucket=${{ vars.BUCKET }}"
         working-directory: infrastructure/terraform
 
       - name: Terraform plan
