@@ -235,11 +235,11 @@ BASE_URL=$(terraform output -raw api_base_url 2>/dev/null) || {
 }
 
 info "API base URL: ${BASE_URL}"
-info "Sending unauthenticated request to ${BASE_URL}/items..."
+info "Sending unauthenticated request to ${BASE_URL}/fasteners..."
 
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
   --max-time 10 \
-  "${BASE_URL}/items")
+  "${BASE_URL}/fasteners")
 
 echo "HTTP status: ${HTTP_STATUS}"
 
