@@ -36,11 +36,12 @@ dax_node_type        = "dax.t3.small"
 dax_node_count       = 3   # Multi-AZ for production availability
 
 # Networking — replace with actual VPC/subnet IDs from your production account
-vpc_id             = "vpc-0abc1234prod0000"
+vpc_id             = "vpc-0770dec8553fdba38"
 private_subnet_ids = [
-  "subnet-0abc1234prod0001",   # us-east-1a
-  "subnet-0abc1234prod0002",   # us-east-1b
-  "subnet-0abc1234prod0003",   # us-east-1c
+  "subnet-09e682572ca8b4a55",   # us-east-1a
+  "subnet-0ce07945e2bc7dcef",   # us-east-1b
+  "subnet-047a3d406f8cd4870",   # us-east-1c
+  "subnet-0349260bb6d3c914e",   # us-east-1c
 ]
 
 # Observability

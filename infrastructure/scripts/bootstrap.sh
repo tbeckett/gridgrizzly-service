@@ -66,10 +66,6 @@ done
 
 [[ -z "${ORG}" ]] && die "--org is required. Example: --org my-company"
 
-# Resource names derived from org and region — must match main.tf backend block.
-STATE_BUCKET="${ORG}-terraform-state-${REGION}"
-LOCK_TABLE="${ORG}-terraform-locks"
-
 # Build the AWS CLI profile flag if a profile was supplied.
 PROFILE_FLAG=""
 [[ -n "${AWS_PROFILE}" ]] && PROFILE_FLAG="--profile ${AWS_PROFILE}"
@@ -91,6 +87,12 @@ IDENTITY=$(aws sts get-caller-identity ${PROFILE_FLAG} --output json 2>&1) \
 
 ACCOUNT_ID=$(echo "${IDENTITY}" | jq -r '.Account')
 CALLER_ARN=$(echo "${IDENTITY}" | jq -r '.Arn')
+
+# Resource names derived from org, account, and region.
+# Account ID is included in the bucket name to guarantee global uniqueness —
+# S3 bucket names are shared across all AWS accounts worldwide.
+STATE_BUCKET="${ORG}-terraform-state-${ACCOUNT_ID}-${REGION}"
+LOCK_TABLE="${ORG}-terraform-locks"
 
 info "Account ID : ${ACCOUNT_ID}"
 info "Caller ARN : ${CALLER_ARN}"
@@ -256,9 +258,9 @@ echo -e "  ${BOLD}S3 bucket${RESET}      : ${STATE_BUCKET}"
 echo -e "  ${BOLD}DynamoDB table${RESET} : ${LOCK_TABLE}"
 echo -e "  ${BOLD}Region${RESET}         : ${REGION}"
 echo ""
-info "Update the backend block in infrastructure/terraform/main.tf if these"
-info "names differ from what is already configured, then run:"
+info "Initialise Terraform with the generated backend config:"
 echo ""
 echo -e "  ${BOLD}cd infrastructure/terraform${RESET}"
-echo -e "  ${BOLD}terraform init${RESET}"
+echo -e "  ${BOLD}terraform init \\${RESET}"
+echo -e "  ${BOLD}  -backend-config=\"bucket=${STATE_BUCKET}\" \\${RESET}"
 echo ""
