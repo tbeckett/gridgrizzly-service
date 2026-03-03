@@ -44,7 +44,7 @@ header()  { echo -e "\n${BOLD}${CYAN}=== $* ===${RESET}"; }
 # Always run relative to the repository root regardless of where the script
 # is invoked from.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="${SCRIPT_DIR}"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 MAVEN_MODULE="${REPO_ROOT}/authorizer-lambda"
 TF_DIR="${REPO_ROOT}/infrastructure/terraform"
 
@@ -147,7 +147,7 @@ info "Skip tests : ${SKIP_TESTS}"
 # ── Maven build ───────────────────────────────────────────────────────────────
 header "Maven Build"
 
-cd "${MAVEN_MODULE}"
+cd "${REPO_ROOT}"
 
 MVN_GOALS="clean package"
 MVN_FLAGS="-B -T 1C"
@@ -160,12 +160,14 @@ fi
 info "Running: mvn ${MVN_FLAGS} ${MVN_GOALS}"
 mvn ${MVN_FLAGS} ${MVN_GOALS}
 
-# Resolve the exact JAR path produced by the shade plugin.
-JAR_PATH=$(ls "${MAVEN_MODULE}/target/lambda-authorizer-"*.jar 2>/dev/null | head -1)
-[[ -z "${JAR_PATH}" ]] && die "No shaded JAR found in ${MAVEN_MODULE}/target/. Did the Maven build succeed?"
+# Resolve the exact JAR paths produced by the shade plugin.
+AUTHORIZER_JAR=$(ls "${REPO_ROOT}/authorizer-lambda/target/lambda-authorizer-"*.jar 2>/dev/null | head -1)
+API_JAR=$(ls "${REPO_ROOT}/api-lambda/target/api-lambda-"*.jar 2>/dev/null | head -1)
+[[ -z "${AUTHORIZER_JAR}" ]] && die "No shaded JAR found in ${REPO_ROOT}/authorizer-lambda/target/. Did the Maven build succeed?"
+[[ -z "${API_JAR}" ]] && die "No shaded JAR found in ${REPO_ROOT}/api-lambda/target/. Did the Maven build succeed?"
 
-JAR_SIZE=$(du -h "${JAR_PATH}" | cut -f1)
-success "JAR built: $(basename "${JAR_PATH}") (${JAR_SIZE})"
+success "Authorizer JAR: $(basename "${AUTHORIZER_JAR}") ($(du -h "${AUTHORIZER_JAR}" | cut -f1))"
+success "API JAR:        $(basename "${API_JAR}") ($(du -h "${API_JAR}" | cut -f1))"
 
 # ── Terraform ─────────────────────────────────────────────────────────────────
 header "Terraform — ${ENV}"
@@ -188,7 +190,8 @@ TF_PLAN_FILE="tfplan-${ENV}-$(date +%Y%m%d%H%M%S)"
 info "Running: terraform plan"
 terraform plan \
   -var-file="${TFVARS_FILE}" \
-  -var="lambda_jar_path=${JAR_PATH}" \
+  -var="lambda_jar_path=${AUTHORIZER_JAR}" \
+  -var="api_lambda_jar_path=${API_JAR}" \
   -out="${TF_PLAN_FILE}" \
   -no-color
 

@@ -102,6 +102,141 @@ resource "aws_lambda_permission" "api_gateway_fasteners" {
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
 }
 
+# ── POST /fasteners ───────────────────────────────────────────────────────────
+
+resource "aws_api_gateway_method" "fasteners_post" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.fasteners.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.jwt.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "fasteners_post" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.fasteners.id
+  http_method             = aws_api_gateway_method.fasteners_post.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.create_fastener.invoke_arn
+}
+
+resource "aws_lambda_permission" "api_gateway_create_fastener" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.create_fastener.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+}
+
+# ── /fasteners/{id} resource ──────────────────────────────────────────────────
+
+resource "aws_api_gateway_resource" "fastener_id" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.fasteners.id
+  path_part   = "{id}"
+}
+
+# ── GET /fasteners/{id} ───────────────────────────────────────────────────────
+
+resource "aws_api_gateway_method" "fastener_get" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.fastener_id.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.jwt.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+    "method.request.path.id"              = true
+  }
+}
+
+resource "aws_api_gateway_integration" "fastener_get" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.fastener_id.id
+  http_method             = aws_api_gateway_method.fastener_get.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.get_fastener.invoke_arn
+}
+
+resource "aws_lambda_permission" "api_gateway_get_fastener" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_fastener.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+}
+
+# ── DELETE /fasteners/{id} ────────────────────────────────────────────────────
+
+resource "aws_api_gateway_method" "fastener_delete" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.fastener_id.id
+  http_method   = "DELETE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.jwt.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+    "method.request.path.id"              = true
+  }
+}
+
+resource "aws_api_gateway_integration" "fastener_delete" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.fastener_id.id
+  http_method             = aws_api_gateway_method.fastener_delete.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.delete_fastener.invoke_arn
+}
+
+resource "aws_lambda_permission" "api_gateway_delete_fastener" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.delete_fastener.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+}
+
+# ── PUT /fasteners/{id} ───────────────────────────────────────────────────────
+
+resource "aws_api_gateway_method" "fastener_put" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.fastener_id.id
+  http_method   = "PUT"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.jwt.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+    "method.request.path.id"              = true
+  }
+}
+
+resource "aws_api_gateway_integration" "fastener_put" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.fastener_id.id
+  http_method             = aws_api_gateway_method.fastener_put.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.update_fastener.invoke_arn
+}
+
+resource "aws_lambda_permission" "api_gateway_update_fastener" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.update_fastener.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+}
+
 # ── Deployment and Stage ──────────────────────────────────────────────────────
 
 # A new deployment is created whenever the REST API definition changes.
@@ -115,6 +250,15 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.fasteners.id,
       aws_api_gateway_method.fasteners_get.id,
       aws_api_gateway_integration.fasteners_get.id,
+      aws_api_gateway_method.fasteners_post.id,
+      aws_api_gateway_integration.fasteners_post.id,
+      aws_api_gateway_resource.fastener_id.id,
+      aws_api_gateway_method.fastener_get.id,
+      aws_api_gateway_integration.fastener_get.id,
+      aws_api_gateway_method.fastener_delete.id,
+      aws_api_gateway_integration.fastener_delete.id,
+      aws_api_gateway_method.fastener_put.id,
+      aws_api_gateway_integration.fastener_put.id,
       aws_api_gateway_authorizer.jwt.id,
     ]))
   }

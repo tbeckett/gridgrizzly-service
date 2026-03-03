@@ -20,6 +20,7 @@ auth0_audience = "https://api.gridgrizly.com"
 
 # Lambda
 lambda_jar_path              = "../../authorizer-lambda/target/lambda-authorizer-1.0.0.jar"
+api_lambda_jar_path          = "../../api-lambda/target/api-lambda-1.0.0.jar"
 lambda_memory_mb             = 512
 lambda_timeout_seconds       = 10
 authorizer_cache_ttl_seconds = 300   # 5-minute cache; covers JWTs with 1-hour expiry comfortably

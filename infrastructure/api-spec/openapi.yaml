@@ -1,0 +1,261 @@
+openapi: 3.0.3
+
+info:
+  title: GridGrizzly API
+  version: 1.0.0
+
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/{stage}
+    variables:
+      apiId:
+        default: placeholder
+      region:
+        default: us-east-1
+      stage:
+        default: v1
+
+security:
+  - bearerAuth: []
+
+paths:
+  /fasteners:
+    get:
+      summary: List fasteners
+      operationId: listFasteners
+      responses:
+        '200':
+          description: A list of fasteners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fastener'
+        '401':
+          description: Missing or invalid Authorization token
+        '403':
+          description: Token valid but access denied by the IAM policy
+
+    post:
+      summary: Create a fastener
+      operationId: createFastener
+      description: >
+        Creates a new fastener associated with the authenticated user.
+        The `id` field is assigned by the server and must not be included in the request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFastenerRequest'
+      responses:
+        '201':
+          description: Fastener created successfully
+          headers:
+            Location:
+              description: URL of the newly created fastener
+              schema:
+                type: string
+                example: /fasteners/550e8400-e29b-41d4-a716-446655440000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fastener'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Authorization token
+        '403':
+          description: Token valid but access denied by the IAM policy
+
+  /fasteners/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a fastener
+      operationId: getFastener
+      responses:
+        '200':
+          description: The requested fastener
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fastener'
+        '401':
+          description: Missing or invalid Authorization token
+        '403':
+          description: Fastener exists but belongs to a different user
+        '404':
+          description: Fastener not found
+
+    put:
+      summary: Replace a fastener
+      operationId: updateFastener
+      description: >
+        Replaces the fastener with the supplied data. The `id` field must not be
+        included in the request body — the server-assigned value from the path is used.
+        The original `createdAt` timestamp is preserved.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFastenerRequest'
+      responses:
+        '200':
+          description: Fastener replaced successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fastener'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid Authorization token
+        '403':
+          description: Fastener exists but belongs to a different user
+        '404':
+          description: Fastener not found
+
+    delete:
+      summary: Delete a fastener
+      operationId: deleteFastener
+      responses:
+        '204':
+          description: Fastener deleted successfully
+        '401':
+          description: Missing or invalid Authorization token
+        '403':
+          description: Fastener exists but belongs to a different user
+        '404':
+          description: Fastener not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    CreateFastenerRequest:
+      type: object
+      required:
+        - type
+        - title
+        - unitOfMeasure
+        - description
+        - usageDescription
+      properties:
+        type:
+          $ref: '#/components/schemas/FastenerType'
+        title:
+          type: string
+        unitOfMeasure:
+          $ref: '#/components/schemas/UnitOfMeasure'
+        description:
+          type: string
+        usageDescription:
+          type: string
+        details:
+          $ref: '#/components/schemas/FastenerDetails'
+        retailData:
+          $ref: '#/components/schemas/RetailData'
+
+    Fastener:
+      type: object
+      required:
+        - id
+        - type
+        - title
+        - unitOfMeasure
+        - description
+        - usageDescription
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/FastenerType'
+        title:
+          type: string
+        unitOfMeasure:
+          $ref: '#/components/schemas/UnitOfMeasure'
+        description:
+          type: string
+        usageDescription:
+          type: string
+        details:
+          $ref: '#/components/schemas/FastenerDetails'
+        retailData:
+          $ref: '#/components/schemas/RetailData'
+
+    FastenerType:
+      type: string
+      enum:
+        - BOLT
+        - SCREW
+        - NUT
+        - WASHER
+        - NAIL
+
+    UnitOfMeasure:
+      type: string
+      enum:
+        - IMPERIAL
+        - METRIC
+
+    FastenerDetails:
+      type: object
+      properties:
+        subType:
+          type: string
+        driveType:
+          type: string
+        threadPitch:
+          type: string
+        length:
+          type: string
+        outsideDiameter:
+          type: string
+        insideDiameter:
+          type: string
+        thickness:
+          type: string
+        gauge:
+          type: string
+        finish:
+          type: string
+        material:
+          type: string
+
+    RetailData:
+      type: object
+      properties:
+        upc:
+          type: string
+        sku:
+          type: string
+        company:
+          type: string

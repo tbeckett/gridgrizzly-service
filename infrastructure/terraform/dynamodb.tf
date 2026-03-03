@@ -24,6 +24,19 @@ resource "aws_dynamodb_table" "main" {
     type = "S"
   }
 
+  attribute {
+    name = "fastenerId"
+    type = "S"
+  }
+
+  # GSI: direct lookup of any fastener by its server-assigned ID.
+  # The base table (PK=userId, SK=resourceId) covers the "query by user" pattern.
+  global_secondary_index {
+    name            = "fastenerId-index"
+    hash_key        = "fastenerId"
+    projection_type = "ALL"
+  }
+
   # Point-in-time recovery: allows table restoration to any second within the
   # last 35 days. Essential for production; low cost relative to the risk of data loss.
   point_in_time_recovery {

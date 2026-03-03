@@ -6,24 +6,27 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!--
-        authorizer-lambda-pom.xml — JWT Authorizer Lambda module
-        ==========================================================
-        Location in repository: lambda-authorizer-service/authorizer-lambda/pom.xml
+        api-lambda-pom.xml — Business Logic API Lambda module
+        =======================================================
+        Location in repository: lambda-authorizer-service/api-lambda/pom.xml
 
-        This module produces a deployable shaded fat JAR for the JWT Authorizer
-        Lambda function. The shade plugin bundles all runtime dependencies into a
-        single self-contained artifact that the Lambda runtime can execute without
-        a classpath.
+        This module produces a deployable shaded fat JAR for all API handler
+        Lambda functions (CRUD operations on fasteners). The shade plugin
+        bundles all runtime dependencies into a single self-contained artifact.
 
         Build output:
-          target/lambda-authorizer-1.0.0.jar  ← deployed to AWS Lambda
+          target/api-lambda-1.0.0.jar  ← deployed to AWS Lambda
 
-        Lambda handler:
-          com.example.authorizer.LambdaAuthorizer::handleRequest
+        Lambda handlers:
+          com.gridgrizzly.api.FastenersHandler::handleRequest
+          com.gridgrizzly.api.CreateFastenerHandler::handleRequest
+          com.gridgrizzly.api.GetFastenerHandler::handleRequest
+          com.gridgrizzly.api.DeleteFastenerHandler::handleRequest
+          com.gridgrizzly.api.UpdateFastenerHandler::handleRequest
 
         To build:
-          mvn clean package                   (from this directory)
-          mvn -pl authorizer-lambda package   (from the repository root)
+          mvn clean package                (from this directory)
+          mvn -pl api-lambda package       (from the repository root)
     -->
 
     <parent>
@@ -33,28 +36,31 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>lambda-authorizer</artifactId>
+    <artifactId>api-lambda</artifactId>
     <packaging>jar</packaging>
 
-    <name>Authorizer Lambda — JWT Validation</name>
+    <name>API Lambda — Business Logic Handlers</name>
     <description>
-        Deployable AWS Lambda function that validates Auth0 JWTs for API Gateway.
+        Deployable AWS Lambda functions for the GridGrizzly REST API.
+        Contains all CRUD handlers for fastener resources, backed by DynamoDB.
         Produces a shaded fat JAR containing all runtime dependencies.
     </description>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.42.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
-        <!-- Internal: shared POJOs and utilities -->
-<!--        <dependency>-->
-<!--            <groupId>com.gridgrizzly</groupId>-->
-<!--            <artifactId>common</artifactId>-->
-<!--            &lt;!&ndash; Version resolved from parent dependencyManagement &ndash;&gt;-->
-<!--        </dependency>-->
-
-        <!-- AWS Lambda runtime — provided by the Lambda execution environment.
-             Declared as compile scope (not provided) because the shade plugin
-             must include it in the fat JAR. Lambda's built-in version may differ
-             from what we compile against; including it ensures consistency. -->
+        <!-- AWS Lambda runtime -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-lambda-java-core</artifactId>
@@ -64,21 +70,25 @@
             <artifactId>aws-lambda-java-events</artifactId>
         </dependency>
 
-        <!-- Auth0 JWT validation -->
+        <!-- AWS SDK v2 DynamoDB -->
         <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
         </dependency>
 
-        <!-- Auth0 JWKS key provider with caching and rate limiting -->
+        <!-- JSON serialisation -->
         <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>jwks-rsa</artifactId>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.14.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.14.2</version>
         </dependency>
 
-        <!-- SLF4J simple binding: writes to stdout → CloudWatch Logs.
-             Runtime-scoped in the sense that it is not needed by dependents,
-             but compile scope is required for the shade plugin to include it. -->
+        <!-- Logging: writes to stdout → CloudWatch Logs -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
@@ -100,6 +110,7 @@
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -116,11 +127,9 @@
             </plugin>
 
             <!--
-                Shade plugin: activated only in this module.
-                Packages all runtime dependencies into a single fat JAR that
-                Lambda can execute. The parent's pluginManagement block provides
-                the version and the signature-stripping filter; only the execution
-                binding is declared here.
+                Shade plugin: packages all runtime dependencies into a single
+                fat JAR that Lambda can execute. Version and signature-stripping
+                filter are inherited from the parent pluginManagement block.
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

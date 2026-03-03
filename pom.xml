@@ -41,7 +41,7 @@
     <modules>
         <module>common</module>
         <module>authorizer-lambda</module>
-        <!-- <module>api-lambda</module> -->   <!-- Uncomment when the module is added -->
+        <module>api-lambda</module>
     </modules>
 
     <!-- ── Global properties ─────────────────────────────────────────────── -->
@@ -60,6 +60,9 @@
         <!-- Auth0 -->
         <auth0.jwt.version>4.4.0</auth0.jwt.version>
         <auth0.jwks.version>0.22.1</auth0.jwks.version>
+
+        <!-- AWS SDK v2 -->
+        <aws.sdk.version>2.26.0</aws.sdk.version>
 
         <!-- Logging -->
         <slf4j.version>2.0.12</slf4j.version>
@@ -104,6 +107,15 @@
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-lambda-java-events</artifactId>
                 <version>${aws.lambda.events.version}</version>
+            </dependency>
+
+            <!-- AWS SDK v2 BOM — manages versions for all SDK v2 artifacts -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <!-- Auth0 JWT validation -->

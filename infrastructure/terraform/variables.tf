@@ -43,6 +43,11 @@ variable "lambda_jar_path" {
   type        = string
 }
 
+variable "api_lambda_jar_path" {
+  description = "Local path to the shaded api-lambda fat JAR (produced by mvn package in api-lambda/)"
+  type        = string
+}
+
 variable "lambda_memory_mb" {
   description = "Memory allocated to the Lambda Authorizer in MB. 512 MB is sufficient for JWT validation workloads. Increase if cold-start latency is a concern."
   type        = number
