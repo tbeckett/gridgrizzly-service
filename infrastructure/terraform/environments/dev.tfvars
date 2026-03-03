@@ -33,8 +33,8 @@ dynamodb_table_name  = "dev-app-data"
 dynamodb_enable_dax  = false   # DAX off in dev
 
 # Networking — replace with actual VPC/subnet IDs from your dev account
-vpc_id             = "vpc-0d18cde500b119546"
-private_subnet_ids = ["subnet-0dbacce0476c45967", "subnet-0783891a9dc4e8be9"]
+vpc_id             = "vpc-0d80e1c28a076647e"
+private_subnet_ids = ["subnet-0a306a0aac631f186", "subnet-07927a3478d133c15"]
 
 # Observability
 log_retention_days   = 7      # Short retention in dev
