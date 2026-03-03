@@ -90,7 +90,7 @@ resource "aws_dax_subnet_group" "main" {
 resource "aws_security_group" "dax" {
   count       = var.dynamodb_enable_dax ? 1 : 0
   name        = "${var.environment}-dax-sg"
-  description = "Security group for the DAX cluster — allows inbound from Lambda security groups only"
+  description = "Security group for the DAX cluster - allows inbound from Lambda security groups only"
   vpc_id      = var.vpc_id
 
   # DAX client port: 8111 (unencrypted) or 9111 (TLS).
