@@ -127,7 +127,7 @@ jobs:
         with:
           terraform_version: "~> 1.7"
 
-      - name: Terraform init
+      - name: Terraform init -backend-config="bucket=${{ vars.BUCKET }}"
         run: terraform init
         working-directory: infrastructure/terraform
 
@@ -210,7 +210,7 @@ jobs:
           terraform_version: "~> 1.7"
 
       - name: Terraform init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET }}"
+        run: terraform init -backend-config="bucket=${{ vars.BUCKET }}"
         working-directory: infrastructure/terraform
 
       # In prod, the plan output is written to the Actions summary so the
