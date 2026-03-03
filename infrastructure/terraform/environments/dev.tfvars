@@ -11,7 +11,7 @@
 # =============================================================================
 
 environment    = "dev"
-aws_region     = "us-east-2"
+aws_region     = "us-east-1"
 
 # Auth0 — dev tenant
 auth0_domain   = "auth0.gridgrizzly.com"
