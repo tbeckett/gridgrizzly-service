@@ -65,19 +65,17 @@ data "aws_iam_policy_document" "apigw_invoke_authorizer" {
   }
 }
 
-# ── Example resource: /items ──────────────────────────────────────────────────
-# Replace or extend this block with your actual API resources.
-# Every method that requires authentication must reference the JWT authorizer.
+# ── GET /fasteners ────────────────────────────────────────────────────────────
 
-resource "aws_api_gateway_resource" "items" {
+resource "aws_api_gateway_resource" "fasteners" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   parent_id   = aws_api_gateway_rest_api.main.root_resource_id
-  path_part   = "items"
+  path_part   = "fasteners"
 }
 
-resource "aws_api_gateway_method" "items_get" {
+resource "aws_api_gateway_method" "fasteners_get" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.items.id
+  resource_id   = aws_api_gateway_resource.fasteners.id
   http_method   = "GET"
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.jwt.id
@@ -85,6 +83,23 @@ resource "aws_api_gateway_method" "items_get" {
   request_parameters = {
     "method.request.header.Authorization" = true
   }
+}
+
+resource "aws_api_gateway_integration" "fasteners_get" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.fasteners.id
+  http_method             = aws_api_gateway_method.fasteners_get.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.fasteners_api.invoke_arn
+}
+
+resource "aws_lambda_permission" "api_gateway_fasteners" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.fasteners_api.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
 }
 
 # ── Deployment and Stage ──────────────────────────────────────────────────────
@@ -97,8 +112,9 @@ resource "aws_api_gateway_deployment" "main" {
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_rest_api.main.body,
-      aws_api_gateway_resource.items.id,
-      aws_api_gateway_method.items_get.id,
+      aws_api_gateway_resource.fasteners.id,
+      aws_api_gateway_method.fasteners_get.id,
+      aws_api_gateway_integration.fasteners_get.id,
       aws_api_gateway_authorizer.jwt.id,
     ]))
   }
