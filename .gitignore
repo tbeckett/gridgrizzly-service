@@ -5,3 +5,6 @@
 
 */target/
 /infrastructure/terraform/.terraform/
+
+#Mac
+.DS_Store
