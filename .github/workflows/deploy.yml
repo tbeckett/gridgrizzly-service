@@ -48,7 +48,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      jar_name: ${{ steps.jar_name.outputs.value }}
+      authorizer_jar_name: ${{ steps.jar_name.outputs.authorizer_jar }}
+      api_jar_name: ${{ steps.jar_name.outputs.api_jar }}
 
     steps:
       - name: Checkout repository
@@ -63,33 +64,42 @@ jobs:
 
       - name: Build, test, and package
         run: mvn -B -T 1C verify
-        working-directory: authorizer-lambda
 
       - name: Publish test results
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
-          report_paths: "authorizer-lambda/target/surefire-reports/*.xml"
+          report_paths: "**/target/surefire-reports/*.xml"
           check_name: "Unit Test Results"
           fail_on_failure: true
 
-      # Resolve the exact JAR filename (version may change between releases)
-      # and expose it as a job output for downstream jobs.
-      - name: Resolve JAR filename
+      # Resolve the exact JAR filenames (version may change between releases)
+      # and expose them as job outputs for downstream jobs.
+      - name: Resolve JAR filenames
         id: jar_name
         run: |
-          JAR=$(ls authorizer-lambda/target/lambda-authorizer-*.jar | head -1 | xargs basename)
-          echo "value=${JAR}" >> "$GITHUB_OUTPUT"
-          echo "JAR filename: ${JAR}"
+          AUTHORIZER_JAR=$(ls authorizer-lambda/target/lambda-authorizer-*.jar | head -1 | xargs basename)
+          API_JAR=$(ls api-lambda/target/api-lambda-*.jar | head -1 | xargs basename)
+          echo "authorizer_jar=${AUTHORIZER_JAR}" >> "$GITHUB_OUTPUT"
+          echo "api_jar=${API_JAR}" >> "$GITHUB_OUTPUT"
+          echo "Authorizer JAR: ${AUTHORIZER_JAR}"
+          echo "API JAR:        ${API_JAR}"
 
-      # The shaded JAR is the only artifact that needs to travel between jobs.
-      # Uploading it here means deploy jobs don't re-run Maven — they deploy
-      # exactly the binary that was built and tested in this job.
-      - name: Upload shaded JAR
+      # Upload both shaded JARs so deploy jobs don't re-run Maven — they deploy
+      # exactly the binaries that were built and tested in this job.
+      - name: Upload authorizer JAR
         uses: actions/upload-artifact@v4
         with:
           name: authorizer-jar-${{ github.sha }}
           path: authorizer-lambda/target/lambda-authorizer-*.jar
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload API JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-jar-${{ github.sha }}
+          path: api-lambda/target/api-lambda-*.jar
           retention-days: 30
           if-no-files-found: error
 
@@ -109,11 +119,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download shaded JAR
+      - name: Download authorizer JAR
         uses: actions/download-artifact@v4
         with:
           name: authorizer-jar-${{ github.sha }}
           path: authorizer-lambda/target
+
+      - name: Download API JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: api-jar-${{ github.sha }}
+          path: api-lambda/target
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -136,7 +152,8 @@ jobs:
         run: |
           terraform plan \
             -var-file="${{ env.TF_VAR_FILE }}" \
-            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.jar_name }}" \
+            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.authorizer_jar_name }}" \
+            -var="api_lambda_jar_path=../../api-lambda/target/${{ needs.build.outputs.api_jar_name }}" \
             -out=tfplan \
             -no-color 2>&1 | tee plan_output.txt
           echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
@@ -191,11 +208,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download shaded JAR
+      - name: Download authorizer JAR
         uses: actions/download-artifact@v4
         with:
           name: authorizer-jar-${{ github.sha }}
           path: authorizer-lambda/target
+
+      - name: Download API JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: api-jar-${{ github.sha }}
+          path: api-lambda/target
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -220,7 +243,8 @@ jobs:
         run: |
           terraform plan \
             -var-file="${{ env.TF_VAR_FILE }}" \
-            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.jar_name }}" \
+            -var="lambda_jar_path=../../authorizer-lambda/target/${{ needs.build.outputs.authorizer_jar_name }}" \
+            -var="api_lambda_jar_path=../../api-lambda/target/${{ needs.build.outputs.api_jar_name }}" \
             -out=tfplan \
             -no-color 2>&1 | tee plan_output.txt
           echo "exitcode=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
