@@ -12,7 +12,7 @@
 # =============================================================================
 
 environment    = "prod"
-aws_region     = "us-east-1"
+aws_region     = "us-east-2"
 
 # Auth0 — production tenant
 auth0_domain   = "auth.gridgrizzly.com"
