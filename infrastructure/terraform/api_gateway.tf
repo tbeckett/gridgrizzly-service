@@ -5,7 +5,7 @@
 # ── REST API ──────────────────────────────────────────────────────────────────
 
 resource "aws_api_gateway_rest_api" "main" {
-  name        = "${var.environment}-authorizer-service-api"
+  name        = "${var.environment}-fastener-api"
   description = "Serverless REST API with Auth0 JWT authorisation"
 
   endpoint_configuration {
@@ -13,7 +13,7 @@ resource "aws_api_gateway_rest_api" "main" {
   }
 
   tags = {
-    Name = "${var.environment}-authorizer-service-api"
+    Name = "${var.environment}-fastener-api"
   }
 }
 
@@ -342,7 +342,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 # ── CloudWatch log group — API Gateway access logs ────────────────────────────
 
 resource "aws_cloudwatch_log_group" "api_gateway_access" {
-  name              = "/aws/apigateway/${var.environment}-authorizer-service-access"
+  name              = "/aws/apigateway/${var.environment}-fastener-access"
   retention_in_days = var.log_retention_days
 
   tags = {
