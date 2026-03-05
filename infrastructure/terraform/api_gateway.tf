@@ -127,6 +127,9 @@ resource "aws_api_gateway_integration" "fasteners_post" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.create_fastener.invoke_arn
+
+  # Include the Authorization header in the cache key so each user gets their own cache entry.
+  cache_key_parameters = ["method.request.header.Authorization"]
 }
 
 resource "aws_lambda_permission" "api_gateway_create_fastener" {
@@ -203,6 +206,10 @@ resource "aws_api_gateway_integration" "fastener_delete" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.delete_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_delete_fastener" {
@@ -235,6 +242,10 @@ resource "aws_api_gateway_integration" "fastener_put" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.update_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_update_fastener" {
