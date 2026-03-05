@@ -133,7 +133,8 @@ jobs:
       - name: Validate tfvars syntax (${{ matrix.environment }})
         run: |
           terraform init -backend=false
-          terraform validate -var-file=environments/${{ matrix.environment }}.tfvars \
+          terraform plan -input=false -refresh=false \
+            -var-file=environments/${{ matrix.environment }}.tfvars \
             -var="lambda_jar_path=/tmp/placeholder.jar" \
             -var="api_lambda_jar_path=/tmp/placeholder.jar" \
             -var="vpc_id=vpc-00000000000000000" \
