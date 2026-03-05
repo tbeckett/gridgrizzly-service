@@ -19,6 +19,13 @@ resource "aws_lambda_function" "fasteners_api" {
 
   role = aws_iam_role.fasteners_lambda.arn
 
+  dynamic "tracing_config" {
+    for_each = var.xray_tracing_enabled ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   depends_on = [aws_cloudwatch_log_group.fasteners_lambda]
 
   tags = {
@@ -36,6 +43,11 @@ resource "aws_iam_role" "fasteners_lambda" {
 resource "aws_iam_role_policy_attachment" "fasteners_basic_execution" {
   role       = aws_iam_role.fasteners_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "fasteners_xray" {
+  role       = aws_iam_role.fasteners_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 # ── CloudWatch Log Group ──────────────────────────────────────────────────────
@@ -74,6 +86,13 @@ resource "aws_lambda_function" "create_fastener" {
     }
   }
 
+  dynamic "tracing_config" {
+    for_each = var.xray_tracing_enabled ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   depends_on = [aws_cloudwatch_log_group.create_fastener_lambda]
 
   tags = {
@@ -91,6 +110,11 @@ resource "aws_iam_role" "create_fastener_lambda" {
 resource "aws_iam_role_policy_attachment" "create_fastener_basic_execution" {
   role       = aws_iam_role.create_fastener_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "create_fastener_xray" {
+  role       = aws_iam_role.create_fastener_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 resource "aws_iam_role_policy" "create_fastener_dynamodb" {
@@ -143,6 +167,13 @@ resource "aws_lambda_function" "get_fastener" {
     }
   }
 
+  dynamic "tracing_config" {
+    for_each = var.xray_tracing_enabled ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   depends_on = [aws_cloudwatch_log_group.get_fastener_lambda]
 
   tags = {
@@ -158,6 +189,11 @@ resource "aws_iam_role" "get_fastener_lambda" {
 resource "aws_iam_role_policy_attachment" "get_fastener_basic_execution" {
   role       = aws_iam_role.get_fastener_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "get_fastener_xray" {
+  role       = aws_iam_role.get_fastener_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 resource "aws_iam_role_policy" "get_fastener_dynamodb" {
@@ -208,6 +244,13 @@ resource "aws_lambda_function" "delete_fastener" {
     }
   }
 
+  dynamic "tracing_config" {
+    for_each = var.xray_tracing_enabled ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   depends_on = [aws_cloudwatch_log_group.delete_fastener_lambda]
 
   tags = {
@@ -223,6 +266,11 @@ resource "aws_iam_role" "delete_fastener_lambda" {
 resource "aws_iam_role_policy_attachment" "delete_fastener_basic_execution" {
   role       = aws_iam_role.delete_fastener_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "delete_fastener_xray" {
+  role       = aws_iam_role.delete_fastener_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 resource "aws_iam_role_policy" "delete_fastener_dynamodb" {
@@ -278,6 +326,13 @@ resource "aws_lambda_function" "update_fastener" {
     }
   }
 
+  dynamic "tracing_config" {
+    for_each = var.xray_tracing_enabled ? [1] : []
+    content {
+      mode = "Active"
+    }
+  }
+
   depends_on = [aws_cloudwatch_log_group.update_fastener_lambda]
 
   tags = {
@@ -293,6 +348,11 @@ resource "aws_iam_role" "update_fastener_lambda" {
 resource "aws_iam_role_policy_attachment" "update_fastener_basic_execution" {
   role       = aws_iam_role.update_fastener_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "update_fastener_xray" {
+  role       = aws_iam_role.update_fastener_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 resource "aws_iam_role_policy" "update_fastener_dynamodb" {

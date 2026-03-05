@@ -123,14 +123,6 @@ resource "aws_security_group" "dax" {
   #   aws_security_group.api_lambda.id,
   # ]
 
-  egress {
-    description = "Outbound to DynamoDB via VPC endpoint"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name = "${var.environment}-dax-sg"
   }
