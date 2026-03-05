@@ -233,8 +233,12 @@ components:
           type: string
         driveType:
           type: string
+        headType:
+          $ref: '#/components/schemas/HeadType'
         threadPitch:
           type: string
+        threadType:
+          $ref: '#/components/schemas/ThreadType'
         length:
           type: string
         outsideDiameter:
@@ -249,6 +253,31 @@ components:
           type: string
         material:
           type: string
+
+    HeadType:
+      type: string
+      enum:
+        - FLAT
+        - OVAL
+        - PAN
+        - TRUSS
+        - ROUND
+        - HEX
+        - HEX_WASHER
+        - SLOTTED_HEX_WASHER
+        - SOCKET_CAP
+        - BUTTON
+
+    ThreadType:
+      type: string
+      enum:
+        - METRIC
+        - UNC
+        - UNF
+        - UNEF
+        - NPT_BSPP
+        - BSPP
+        - _8UN
 
     RetailData:
       type: object

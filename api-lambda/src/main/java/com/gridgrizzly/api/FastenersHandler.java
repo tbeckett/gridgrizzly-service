@@ -24,52 +24,52 @@ public class FastenersHandler
     private static final List<Fastener> FASTENERS = List.of(
             new Fastener("f00000000001", FastenerType.BOLT, "Placeholder Bolt 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Hex", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Hex", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "BOLT-001", "Placeholder Co.")),
 
             new Fastener("f00000000002", FastenerType.BOLT, "Placeholder Bolt 2", UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Carriage", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Carriage", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "BOLT-002", "Placeholder Co.")),
 
             new Fastener("f00000000003", FastenerType.SCREW, "Placeholder Screw 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Machine", "Phillips", null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Machine", "Phillips", null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-001", "Placeholder Co.")),
 
             new Fastener("f00000000004", FastenerType.SCREW, "Placeholder Screw 2", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Wood", "Flat", null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Wood", "Flat", null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-002", "Placeholder Co.")),
 
             new Fastener("f00000000005", FastenerType.SCREW, "Placeholder Screw 3", UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Sheet Metal", "Hex", null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Sheet Metal", "Hex", null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-003", "Placeholder Co.")),
 
             new Fastener("f00000000006", FastenerType.NUT, "Placeholder Nut 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Hex", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Hex", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "NUT-001", "Placeholder Co.")),
 
             new Fastener("f00000000007", FastenerType.NUT, "Placeholder Nut 2", UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Lock", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Lock", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "NUT-002", "Placeholder Co.")),
 
             new Fastener("f00000000008", FastenerType.WASHER, "Placeholder Washer 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Flat", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Flat", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "WSHR-001", "Placeholder Co.")),
 
             new Fastener("f00000000009", FastenerType.WASHER, "Placeholder Washer 2", UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Lock", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Lock", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "WSHR-002", "Placeholder Co.")),
 
             new Fastener("f00000000010", FastenerType.NAIL, "Placeholder Nail 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Common", null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Common", null, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "NAIL-001", "Placeholder Co."))
     );
 

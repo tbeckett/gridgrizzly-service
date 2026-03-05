@@ -52,7 +52,6 @@ jobs:
       # Surefire produces XML reports in target/surefire-reports/ consumed below.
       - name: Build and run tests
         run: mvn -B -T 1C verify
-        working-directory: authorizer-lambda
 
       # Publish test results as a native GitHub check so failures appear inline
       # on the PR without needing to dig into raw logs.
@@ -60,14 +59,14 @@ jobs:
         uses: mikepenz/action-junit-report@v4
         if: always()                    # Run even if the build step failed
         with:
-          report_paths: "authorizer-lambda/target/surefire-reports/*.xml"
+          report_paths: "**/target/surefire-reports/*.xml"
           check_name: "Unit Test Results"
           fail_on_failure: true
 
-      # Upload the shaded JAR as a build artifact. The deploy workflow downloads
-      # this artifact rather than rebuilding from scratch, ensuring the deployed
-      # binary is exactly what was tested.
-      - name: Upload shaded JAR
+      # Upload both shaded JARs as build artifacts. The deploy workflow downloads
+      # these artifacts rather than rebuilding from scratch, ensuring the deployed
+      # binaries are exactly what was tested.
+      - name: Upload authorizer JAR
         uses: actions/upload-artifact@v4
         if: github.event_name == 'pull_request'
         with:
@@ -76,10 +75,23 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+      - name: Upload API JAR
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: api-jar-${{ github.sha }}
+          path: api-lambda/target/api-lambda-*.jar
+          retention-days: 7
+          if-no-files-found: error
+
   # ── Job 2: Terraform Validate ──────────────────────────────────────────────
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the repo
+      pull-requests: write # Required for PR comments if using commenter action
+      security-events: write # Required to upload SARIF results to the security tab
 
     strategy:
       matrix:
@@ -115,18 +127,17 @@ jobs:
       # Catches common misconfigurations (e.g. unencrypted resources,
       # overly permissive IAM, missing logging) before they reach AWS.
       - name: Run tfsec (static security analysis)
-        uses: aquasecurity/tfsec-action@v1.0.3
+        uses: aquasecurity/trivy-action@master
         with:
-          working_directory: infrastructure/terraform
-          soft_fail: false              # Fail CI on HIGH or CRITICAL findings
+          format: sarif
+          output: 'tfsec.sarif'
+          scan-type: 'config'
+          scan-ref: './infrastructure/terraform'
+          tf-vars: './infrastructure/terraform/environments/${{ matrix.environment }}.tfvars'
+          severity: 'HIGH,CRITICAL'   # Fail CI on...
+          exit-code: 0                # ... HIGH or CRITICAL findings
 
-      # Validate that the .tfvars file for this environment parses correctly.
-      # This catches typos in variable values without running a full plan.
-      - name: Validate tfvars syntax (${{ matrix.environment }})
-        run: |
-          terraform init -backend=false
-          terraform validate -var-file=environments/${{ matrix.environment }}.tfvars \
-            -var="lambda_jar_path=/tmp/placeholder.jar" \
-            -var="vpc_id=vpc-00000000000000000" \
-            -var='private_subnet_ids=["subnet-00000000000000001"]'
-        working-directory: infrastructure/terraform
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tfsec.sarif

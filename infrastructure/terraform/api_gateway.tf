@@ -20,12 +20,12 @@ resource "aws_api_gateway_rest_api" "main" {
 # ── Lambda Authorizer ─────────────────────────────────────────────────────────
 
 resource "aws_api_gateway_authorizer" "jwt" {
-  name                             = "${var.environment}-jwt-authorizer"
-  rest_api_id                      = aws_api_gateway_rest_api.main.id
-  authorizer_uri                   = aws_lambda_function.authorizer.invoke_arn
-  authorizer_credentials           = aws_iam_role.api_gateway_invoker.arn
-  type                             = "TOKEN"
-  identity_source                  = "method.request.header.Authorization"
+  name                   = "${var.environment}-jwt-authorizer"
+  rest_api_id            = aws_api_gateway_rest_api.main.id
+  authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
+  authorizer_credentials = aws_iam_role.api_gateway_invoker.arn
+  type                   = "TOKEN"
+  identity_source        = "method.request.header.Authorization"
 
   # API Gateway caches a successful Authorizer response for this TTL.
   # Requests arriving with the same token within the window skip Lambda invocation entirely.
@@ -83,6 +83,7 @@ resource "aws_api_gateway_method" "fasteners_get" {
   request_parameters = {
     "method.request.header.Authorization" = true
   }
+
 }
 
 resource "aws_api_gateway_integration" "fasteners_get" {
@@ -92,6 +93,9 @@ resource "aws_api_gateway_integration" "fasteners_get" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.fasteners_api.invoke_arn
+
+  # Include the Authorization header in the cache key so each user gets their own cache entry.
+  cache_key_parameters = ["method.request.header.Authorization"]
 }
 
 resource "aws_lambda_permission" "api_gateway_fasteners" {
@@ -123,6 +127,9 @@ resource "aws_api_gateway_integration" "fasteners_post" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.create_fastener.invoke_arn
+
+  # Include the Authorization header in the cache key so each user gets their own cache entry.
+  cache_key_parameters = ["method.request.header.Authorization"]
 }
 
 resource "aws_lambda_permission" "api_gateway_create_fastener" {
@@ -163,6 +170,10 @@ resource "aws_api_gateway_integration" "fastener_get" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.get_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_get_fastener" {
@@ -195,6 +206,10 @@ resource "aws_api_gateway_integration" "fastener_delete" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.delete_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_delete_fastener" {
@@ -227,6 +242,10 @@ resource "aws_api_gateway_integration" "fastener_put" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.update_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_update_fastener" {
@@ -273,6 +292,9 @@ resource "aws_api_gateway_stage" "main" {
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = var.api_stage_name
 
+  cache_cluster_enabled = var.api_cache_enabled
+  cache_cluster_size    = var.api_cache_size_gb
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gateway_access.arn
     format = jsonencode({
@@ -313,6 +335,36 @@ resource "aws_api_gateway_method_settings" "throttle" {
     # Log full request/response data at ERROR level only.
     # Set to "INFO" to log all requests — useful in dev, costly in production.
     logging_level = "ERROR"
+
+    # Caching is disabled at the catch-all level. It is enabled selectively on
+    # GET methods below — POST, PUT, and DELETE must never serve cached responses.
+    caching_enabled = false
+  }
+}
+
+# Response caching for GET /fasteners — scoped per-user via the Authorization cache key.
+resource "aws_api_gateway_method_settings" "fasteners_get_cache" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.main.stage_name
+  method_path = "fasteners/GET"
+
+  settings {
+    caching_enabled      = var.api_cache_enabled
+    cache_ttl_in_seconds = var.api_cache_ttl_seconds
+    cache_data_encrypted = true
+  }
+}
+
+# Response caching for GET /fasteners/{id} — scoped per-user and per-resource.
+resource "aws_api_gateway_method_settings" "fastener_get_cache" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  stage_name  = aws_api_gateway_stage.main.stage_name
+  method_path = "fasteners/{id}/GET"
+
+  settings {
+    caching_enabled      = var.api_cache_enabled
+    cache_ttl_in_seconds = var.api_cache_ttl_seconds
+    cache_data_encrypted = true
   }
 }
 
@@ -344,6 +396,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 resource "aws_cloudwatch_log_group" "api_gateway_access" {
   name              = "/aws/apigateway/${var.environment}-fastener-access"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-api-gateway-access-logs"

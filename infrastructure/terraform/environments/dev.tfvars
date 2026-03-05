@@ -10,19 +10,19 @@
 # Log retention is short. All other settings favour cost over resilience.
 # =============================================================================
 
-environment    = "dev"
-aws_region     = "us-east-1"
+environment = "dev"
+aws_region  = "us-east-1"
 
 # Auth0 — dev tenant
 auth0_domain   = "auth0.gridgrizzly.com"
 auth0_audience = "https://api.gridgrizzly.com"
 
 # Lambda
-lambda_jar_path            = "../../authorizer-lambda/target/lambda-authorizer-1.0.0.jar"
-api_lambda_jar_path        = "../../api-lambda/target/api-lambda-1.0.0.jar"
-lambda_memory_mb           = 512
-lambda_timeout_seconds     = 10
-authorizer_cache_ttl_seconds = 0   # Disabled in dev — every request hits the Authorizer
+lambda_jar_path              = "../../authorizer-lambda/target/lambda-authorizer-1.0.0.jar"
+api_lambda_jar_path          = "../../api-lambda/target/api-lambda-1.0.0.jar"
+lambda_memory_mb             = 512
+lambda_timeout_seconds       = 10
+authorizer_cache_ttl_seconds = 0 # Disabled in dev — every request hits the Authorizer
 
 # API Gateway
 api_stage_name           = "v1"
@@ -30,13 +30,13 @@ api_throttle_rate_limit  = 50
 api_throttle_burst_limit = 100
 
 # DynamoDB
-dynamodb_table_name  = "dev-app-data"
-dynamodb_enable_dax  = false   # DAX off in dev
+dynamodb_table_name = "dev-app-data"
+dynamodb_enable_dax = false # DAX off in dev
 
 # Networking — replace with actual VPC/subnet IDs from your dev account
 vpc_id             = "vpc-0d80e1c28a076647e"
 private_subnet_ids = ["subnet-0a306a0aac631f186", "subnet-07927a3478d133c15"]
 
 # Observability
-log_retention_days   = 7      # Short retention in dev
+log_retention_days   = 7 # Short retention in dev
 xray_tracing_enabled = true
