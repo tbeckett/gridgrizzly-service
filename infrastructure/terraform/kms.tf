@@ -23,6 +23,19 @@ resource "aws_kms_key" "cloudwatch_logs" {
         Resource  = "*"
       },
       {
+        Sid       = "AllowCallerToManageKey"
+        Effect    = "Allow"
+        Principal = { AWS = data.aws_caller_identity.current.arn }
+        Action = [
+          "kms:PutKeyPolicy",
+          "kms:GetKeyPolicy",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+      {
         Sid    = "AllowCloudWatchLogs"
         Effect = "Allow"
         Principal = {
