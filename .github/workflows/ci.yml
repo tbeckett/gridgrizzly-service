@@ -88,6 +88,10 @@ jobs:
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # Required to checkout the repo
+      pull-requests: write # Required for PR comments if using commenter action
+      security-events: write # Required to upload SARIF results to the security tab
 
     strategy:
       matrix:
@@ -123,7 +127,14 @@ jobs:
       # Catches common misconfigurations (e.g. unencrypted resources,
       # overly permissive IAM, missing logging) before they reach AWS.
       - name: Run tfsec (static security analysis)
-        uses: aquasecurity/tfsec-action@v1.0.3
+        uses: aquasecurity/trivy-action@master
         with:
-          working_directory: infrastructure/terraform
-          soft_fail: false              # Fail CI on HIGH or CRITICAL findings
+          format: sarif
+          output: 'tfsec.sarif'
+          scan-ref: 'infrastructure/terraform'
+          exit-code: 0              # Fail CI on HIGH or CRITICAL findings
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: tfsec.sarif
