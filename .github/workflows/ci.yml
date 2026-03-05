@@ -52,7 +52,6 @@ jobs:
       # Surefire produces XML reports in target/surefire-reports/ consumed below.
       - name: Build and run tests
         run: mvn -B -T 1C verify
-        working-directory: authorizer-lambda
 
       # Publish test results as a native GitHub check so failures appear inline
       # on the PR without needing to dig into raw logs.
@@ -60,19 +59,28 @@ jobs:
         uses: mikepenz/action-junit-report@v4
         if: always()                    # Run even if the build step failed
         with:
-          report_paths: "authorizer-lambda/target/surefire-reports/*.xml"
+          report_paths: "**/target/surefire-reports/*.xml"
           check_name: "Unit Test Results"
           fail_on_failure: true
 
-      # Upload the shaded JAR as a build artifact. The deploy workflow downloads
-      # this artifact rather than rebuilding from scratch, ensuring the deployed
-      # binary is exactly what was tested.
-      - name: Upload shaded JAR
+      # Upload both shaded JARs as build artifacts. The deploy workflow downloads
+      # these artifacts rather than rebuilding from scratch, ensuring the deployed
+      # binaries are exactly what was tested.
+      - name: Upload authorizer JAR
         uses: actions/upload-artifact@v4
         if: github.event_name == 'pull_request'
         with:
           name: authorizer-jar-${{ github.sha }}
           path: authorizer-lambda/target/lambda-authorizer-*.jar
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload API JAR
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: api-jar-${{ github.sha }}
+          path: api-lambda/target/api-lambda-*.jar
           retention-days: 7
           if-no-files-found: error
 
@@ -127,6 +135,7 @@ jobs:
           terraform init -backend=false
           terraform validate -var-file=environments/${{ matrix.environment }}.tfvars \
             -var="lambda_jar_path=/tmp/placeholder.jar" \
+            -var="api_lambda_jar_path=/tmp/placeholder.jar" \
             -var="vpc_id=vpc-00000000000000000" \
             -var='private_subnet_ids=["subnet-00000000000000001"]'
         working-directory: infrastructure/terraform
