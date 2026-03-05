@@ -46,7 +46,6 @@ public record AuthorizerConfig(
         return value.trim();
     }
 
-    /** The Auth0 issuer claim, e.g. "https://your-tenant.us.auth0.com/" */
     public String issuer() {
         return "https://" + auth0Domain + "/";
     }
