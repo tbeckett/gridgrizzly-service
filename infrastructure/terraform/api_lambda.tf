@@ -55,6 +55,7 @@ resource "aws_iam_role_policy_attachment" "fasteners_xray" {
 resource "aws_cloudwatch_log_group" "fasteners_lambda" {
   name              = "/aws/lambda/${var.environment}-fasteners-api"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-fasteners-api-logs"
@@ -136,6 +137,7 @@ data "aws_iam_policy_document" "create_fastener_dynamodb" {
 resource "aws_cloudwatch_log_group" "create_fastener_lambda" {
   name              = "/aws/lambda/${var.environment}-create-fastener"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-create-fastener-logs"
@@ -213,6 +215,7 @@ data "aws_iam_policy_document" "get_fastener_dynamodb" {
 resource "aws_cloudwatch_log_group" "get_fastener_lambda" {
   name              = "/aws/lambda/${var.environment}-get-fastener"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-get-fastener-logs"
@@ -295,6 +298,7 @@ data "aws_iam_policy_document" "delete_fastener_dynamodb" {
 resource "aws_cloudwatch_log_group" "delete_fastener_lambda" {
   name              = "/aws/lambda/${var.environment}-delete-fastener"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-delete-fastener-logs"
@@ -377,6 +381,7 @@ data "aws_iam_policy_document" "update_fastener_dynamodb" {
 resource "aws_cloudwatch_log_group" "update_fastener_lambda" {
   name              = "/aws/lambda/${var.environment}-update-fastener"
   retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.cloudwatch_logs.arn
 
   tags = {
     Name = "${var.environment}-update-fastener-logs"

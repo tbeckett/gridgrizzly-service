@@ -101,6 +101,34 @@ variable "api_throttle_burst_limit" {
   default     = 200
 }
 
+variable "api_cache_enabled" {
+  description = "Whether to enable API Gateway response caching. Disable in dev to avoid the per-hour cache cluster cost."
+  type        = bool
+  default     = false
+}
+
+variable "api_cache_size_gb" {
+  description = "Size of the API Gateway cache cluster in GB. Valid values: 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237."
+  type        = string
+  default     = "0.5"
+
+  validation {
+    condition     = contains(["0.5", "1.6", "6.1", "13.5", "28.4", "58.2", "118", "237"], var.api_cache_size_gb)
+    error_message = "api_cache_size_gb must be one of the valid API Gateway cache cluster sizes."
+  }
+}
+
+variable "api_cache_ttl_seconds" {
+  description = "Default TTL in seconds for cached API Gateway responses."
+  type        = number
+  default     = 300
+
+  validation {
+    condition     = var.api_cache_ttl_seconds >= 0 && var.api_cache_ttl_seconds <= 3600
+    error_message = "api_cache_ttl_seconds must be between 0 and 3600."
+  }
+}
+
 # ── DynamoDB ──────────────────────────────────────────────────────────────────
 
 variable "dynamodb_table_name" {
