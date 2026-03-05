@@ -4,7 +4,9 @@ import com.gridgrizzly.api.model.CreateFastenerRequest;
 import com.gridgrizzly.api.model.Fastener;
 import com.gridgrizzly.api.model.FastenerDetails;
 import com.gridgrizzly.api.model.FastenerType;
+import com.gridgrizzly.api.model.HeadType;
 import com.gridgrizzly.api.model.RetailData;
+import com.gridgrizzly.api.model.ThreadType;
 import com.gridgrizzly.api.model.UnitOfMeasure;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -33,7 +35,7 @@ class FastenerStore {
                 .keyConditionExpression("fastenerId = :fid")
                 .expressionAttributeValues(Map.of(":fid", s(fastenerId)))
                 .build());
-        return resp.items().isEmpty() ? null : resp.items().get(0);
+        return resp.items().isEmpty() ? null : resp.items().getFirst();
     }
 
     // ── Mutations ─────────────────────────────────────────────────────────────
@@ -99,7 +101,9 @@ class FastenerStore {
         Map<String, AttributeValue> m = new HashMap<>();
         putIfSet(m, "subType",         d.subType());
         putIfSet(m, "driveType",       d.driveType());
+        putIfSet(m, "headType",        d.headType() != null ? d.headType().name() : null);
         putIfSet(m, "threadPitch",     d.threadPitch());
+        putIfSet(m, "threadType",      d.threadType() != null ? d.threadType().name() : null);
         putIfSet(m, "length",          d.length());
         putIfSet(m, "outsideDiameter", d.outsideDiameter());
         putIfSet(m, "insideDiameter",  d.insideDiameter());
@@ -119,10 +123,14 @@ class FastenerStore {
     }
 
     private static FastenerDetails toDetails(Map<String, AttributeValue> m) {
+        String headTypeStr   = str(m, "headType");
+        String threadTypeStr = str(m, "threadType");
         return new FastenerDetails(
                 str(m, "subType"),
                 str(m, "driveType"),
+                headTypeStr   != null ? HeadType.valueOf(headTypeStr)   : null,
                 str(m, "threadPitch"),
+                threadTypeStr != null ? ThreadType.valueOf(threadTypeStr) : null,
                 str(m, "length"),
                 str(m, "outsideDiameter"),
                 str(m, "insideDiameter"),

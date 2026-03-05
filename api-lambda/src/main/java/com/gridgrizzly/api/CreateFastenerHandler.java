@@ -124,7 +124,9 @@ public class CreateFastenerHandler
         Map<String, AttributeValue> m = new HashMap<>();
         putIfSet(m, "subType",          d.subType());
         putIfSet(m, "driveType",        d.driveType());
+        putIfSet(m, "headType",         d.headType() != null ? d.headType().name() : null);
         putIfSet(m, "threadPitch",      d.threadPitch());
+        putIfSet(m, "threadType",       d.threadType() != null ? d.threadType().name() : null);
         putIfSet(m, "length",           d.length());
         putIfSet(m, "outsideDiameter",  d.outsideDiameter());
         putIfSet(m, "insideDiameter",   d.insideDiameter());
