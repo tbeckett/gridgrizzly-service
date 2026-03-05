@@ -132,11 +132,15 @@ jobs:
       # This catches typos in variable values without running a full plan.
       - name: Validate tfvars syntax (${{ matrix.environment }})
         run: |
-          terraform init -backend=false
+          # Override the remote backend with a local one so plan works without AWS credentials.
+          # -reconfigure acknowledges the backend change; the temporary file is removed after.
+          echo 'terraform { backend "local" {} }' > ci_backend_override.tf
+          terraform init -reconfigure
           terraform plan -input=false -refresh=false \
             -var-file=environments/${{ matrix.environment }}.tfvars \
             -var="lambda_jar_path=/tmp/placeholder.jar" \
             -var="api_lambda_jar_path=/tmp/placeholder.jar" \
             -var="vpc_id=vpc-00000000000000000" \
             -var='private_subnet_ids=["subnet-00000000000000001"]'
+          rm ci_backend_override.tf
         working-directory: infrastructure/terraform
