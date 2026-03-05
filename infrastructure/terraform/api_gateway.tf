@@ -84,8 +84,6 @@ resource "aws_api_gateway_method" "fasteners_get" {
     "method.request.header.Authorization" = true
   }
 
-  # Include the Authorization header in the cache key so each user gets their own cache entry.
-  cache_key_parameters = ["method.request.header.Authorization"]
 }
 
 resource "aws_api_gateway_integration" "fasteners_get" {
@@ -95,6 +93,9 @@ resource "aws_api_gateway_integration" "fasteners_get" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.fasteners_api.invoke_arn
+
+  # Include the Authorization header in the cache key so each user gets their own cache entry.
+  cache_key_parameters = ["method.request.header.Authorization"]
 }
 
 resource "aws_lambda_permission" "api_gateway_fasteners" {
@@ -157,10 +158,6 @@ resource "aws_api_gateway_method" "fastener_get" {
     "method.request.header.Authorization" = true
     "method.request.path.id"              = true
   }
-
-  # Cache key includes both the path parameter and the Authorization header
-  # so cache entries are scoped to a specific fastener and user.
-  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_api_gateway_integration" "fastener_get" {
@@ -170,6 +167,10 @@ resource "aws_api_gateway_integration" "fastener_get" {
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
   uri                     = aws_lambda_function.get_fastener.invoke_arn
+
+  # Cache key includes both the path parameter and the Authorization header
+  # so cache entries are scoped to a specific fastener and user.
+  cache_key_parameters = ["method.request.header.Authorization", "method.request.path.id"]
 }
 
 resource "aws_lambda_permission" "api_gateway_get_fastener" {
