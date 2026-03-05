@@ -131,8 +131,10 @@ jobs:
         with:
           format: sarif
           output: 'tfsec.sarif'
-          scan-ref: 'infrastructure/terraform'
-          exit-code: 0              # Fail CI on HIGH or CRITICAL findings
+          scan-type: 'config'
+          scan-ref: './infrastructure/terraform'
+          severity: 'HIGH,CRITICAL'
+          exit-code: 1 # Fail CI on HIGH or CRITICAL findings
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
