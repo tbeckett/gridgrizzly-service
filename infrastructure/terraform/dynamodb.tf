@@ -6,7 +6,7 @@
 
 resource "aws_dynamodb_table" "main" {
   name         = var.dynamodb_table_name
-  billing_mode = "PAY_PER_REQUEST"   # On-demand: no capacity planning required
+  billing_mode = "PAY_PER_REQUEST" # On-demand: no capacity planning required
 
   # Primary key design: user-scoped access pattern.
   # PK = userId  → all queries are anchored to the authenticated user
@@ -186,11 +186,11 @@ data "aws_iam_policy_document" "dax_dynamodb" {
 }
 
 resource "aws_dax_cluster" "main" {
-  count          = var.dynamodb_enable_dax ? 1 : 0
-  cluster_name   = "${var.environment}-dax-cluster"
-  node_type      = var.dax_node_type
+  count              = var.dynamodb_enable_dax ? 1 : 0
+  cluster_name       = "${var.environment}-dax-cluster"
+  node_type          = var.dax_node_type
   replication_factor = var.dax_node_count
-  iam_role_arn   = aws_iam_role.dax[0].arn
+  iam_role_arn       = aws_iam_role.dax[0].arn
   subnet_group_name  = aws_dax_subnet_group.main[0].name
   security_group_ids = [aws_security_group.dax[0].id]
 

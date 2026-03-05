@@ -34,9 +34,9 @@ resource "aws_lambda_function" "authorizer" {
   # JAVA_TOOL_OPTIONS is the correct env var for Lambda Java runtimes (not _JAVA_OPTIONS).
   environment {
     variables = {
-      AUTH0_DOMAIN              = var.auth0_domain
-      AUTH0_AUDIENCE            = var.auth0_audience
-      JAVA_TOOL_OPTIONS         = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+      AUTH0_DOMAIN      = var.auth0_domain
+      AUTH0_AUDIENCE    = var.auth0_audience
+      JAVA_TOOL_OPTIONS = "-XX:+TieredCompilation -XX:TieredStopAtLevel=1"
     }
   }
 
@@ -179,7 +179,7 @@ resource "aws_cloudwatch_metric_alarm" "authorizer_duration_p99" {
   extended_statistic  = "p99"
   period              = 300
   evaluation_periods  = 3
-  threshold           = var.lambda_timeout_seconds * 1000 * 0.8   # 80% of timeout in ms
+  threshold           = var.lambda_timeout_seconds * 1000 * 0.8 # 80% of timeout in ms
   comparison_operator = "GreaterThanOrEqualToThreshold"
   treat_missing_data  = "notBreaching"
 

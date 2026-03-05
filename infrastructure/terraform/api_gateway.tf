@@ -20,12 +20,12 @@ resource "aws_api_gateway_rest_api" "main" {
 # ── Lambda Authorizer ─────────────────────────────────────────────────────────
 
 resource "aws_api_gateway_authorizer" "jwt" {
-  name                             = "${var.environment}-jwt-authorizer"
-  rest_api_id                      = aws_api_gateway_rest_api.main.id
-  authorizer_uri                   = aws_lambda_function.authorizer.invoke_arn
-  authorizer_credentials           = aws_iam_role.api_gateway_invoker.arn
-  type                             = "TOKEN"
-  identity_source                  = "method.request.header.Authorization"
+  name                   = "${var.environment}-jwt-authorizer"
+  rest_api_id            = aws_api_gateway_rest_api.main.id
+  authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
+  authorizer_credentials = aws_iam_role.api_gateway_invoker.arn
+  type                   = "TOKEN"
+  identity_source        = "method.request.header.Authorization"
 
   # API Gateway caches a successful Authorizer response for this TTL.
   # Requests arriving with the same token within the window skip Lambda invocation entirely.
