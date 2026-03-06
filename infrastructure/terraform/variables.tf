@@ -118,6 +118,7 @@ variable "api_cache_size_gb" {
   }
 }
 
+
 variable "api_cache_ttl_seconds" {
   description = "Default TTL in seconds for cached API Gateway responses."
   type        = number
@@ -173,14 +174,25 @@ variable "private_subnet_ids" {
 
 # ── Observability ─────────────────────────────────────────────────────────────
 
-variable "log_level" {
-  description = "Log level for Lambda functions. Controls verbosity of structured JSON logs sent to CloudWatch."
+variable "application_log_level" {
+  description = "Log level applied to application_log_level in the Lambda logging_config block. Must be a value accepted by both: DEBUG, INFO, or WARN."
   type        = string
   default     = "INFO"
 
   validation {
     condition     = contains(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"], var.log_level)
-    error_message = "log_level must be one of: TRACE, DEBUG, INFO, WARN, ERROR, FATAL."
+    error_message = "application_log_level must be one of: TRACE, DEBUG, INFO, WARN, ERROR, FATAL."
+  }
+}
+
+variable "system_log_level" {
+  description = "Log level applied to system_log_level in the Lambda logging_config block."
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARN"], var.log_level)
+    error_message = "system_log_level must be one of: DEBUG, INFO, WARN."
   }
 }
 

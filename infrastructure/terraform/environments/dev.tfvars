@@ -38,6 +38,7 @@ vpc_id             = "vpc-0d80e1c28a076647e"
 private_subnet_ids = ["subnet-0a306a0aac631f186", "subnet-07927a3478d133c15"]
 
 # Observability
-log_level            = "DEBUG"
-log_retention_days   = 7 # Short retention in dev
-xray_tracing_enabled = true
+application_log_level = "DEBUG"
+system_log_level      = "DEBUG"
+log_retention_days    = 7 # Short retention in dev
+xray_tracing_enabled  = true
