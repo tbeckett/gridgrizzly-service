@@ -180,7 +180,7 @@ variable "application_log_level" {
   default     = "INFO"
 
   validation {
-    condition     = contains(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"], var.log_level)
+    condition     = contains(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"], var.application_log_level)
     error_message = "application_log_level must be one of: TRACE, DEBUG, INFO, WARN, ERROR, FATAL."
   }
 }
@@ -191,7 +191,7 @@ variable "system_log_level" {
   default     = "INFO"
 
   validation {
-    condition     = contains(["DEBUG", "INFO", "WARN"], var.log_level)
+    condition     = contains(["DEBUG", "INFO", "WARN"], var.system_log_level)
     error_message = "system_log_level must be one of: DEBUG, INFO, WARN."
   }
 }
