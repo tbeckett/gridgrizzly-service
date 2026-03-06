@@ -46,5 +46,6 @@ private_subnet_ids = [
 ]
 
 # Observability
+log_level            = "WARN"
 log_retention_days   = 90 # 90-day retention for compliance
 xray_tracing_enabled = true

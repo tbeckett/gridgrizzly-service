@@ -2,7 +2,7 @@ package com.gridgrizzly.api.model;
 
 public record FastenerDetails(
         String subType,
-        String driveType,
+        DriveType driveType,
         HeadType headType,
         String threadPitch,
         ThreadType threadType,

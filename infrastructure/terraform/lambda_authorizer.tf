@@ -56,6 +56,11 @@ resource "aws_lambda_function" "authorizer" {
   # invocation does not auto-create a log group with infinite retention.
   depends_on = [aws_cloudwatch_log_group.authorizer_lambda]
 
+  logging_config {
+    log_level  = "${var.log_level}"
+    log_format = "JSON"
+  }
+
   tags = {
     Name = "${var.environment}-jwt-authorizer"
   }

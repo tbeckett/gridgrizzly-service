@@ -14,7 +14,7 @@ environment = "dev"
 aws_region  = "us-east-1"
 
 # Auth0 — dev tenant
-auth0_domain   = "auth0.gridgrizzly.com"
+auth0_domain   = "auth.gridgrizzly.com"
 auth0_audience = "https://api.gridgrizzly.com"
 
 # Lambda
@@ -38,5 +38,6 @@ vpc_id             = "vpc-0d80e1c28a076647e"
 private_subnet_ids = ["subnet-0a306a0aac631f186", "subnet-07927a3478d133c15"]
 
 # Observability
+log_level            = "DEBUG"
 log_retention_days   = 7 # Short retention in dev
 xray_tracing_enabled = true
