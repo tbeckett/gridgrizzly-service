@@ -1,13 +1,6 @@
 package com.gridgrizzly.api;
 
-import com.gridgrizzly.api.model.CreateFastenerRequest;
-import com.gridgrizzly.api.model.Fastener;
-import com.gridgrizzly.api.model.FastenerDetails;
-import com.gridgrizzly.api.model.FastenerType;
-import com.gridgrizzly.api.model.HeadType;
-import com.gridgrizzly.api.model.RetailData;
-import com.gridgrizzly.api.model.ThreadType;
-import com.gridgrizzly.api.model.UnitOfMeasure;
+import com.gridgrizzly.api.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
@@ -100,7 +93,7 @@ class FastenerStore {
     static AttributeValue toAttrMap(FastenerDetails d) {
         Map<String, AttributeValue> m = new HashMap<>();
         putIfSet(m, "subType",         d.subType());
-        putIfSet(m, "driveType",       d.driveType());
+        putIfSet(m, "driveType",       d.driveType() != null ? d.driveType().name() : null);
         putIfSet(m, "headType",        d.headType() != null ? d.headType().name() : null);
         putIfSet(m, "threadPitch",     d.threadPitch());
         putIfSet(m, "threadType",      d.threadType() != null ? d.threadType().name() : null);
@@ -123,11 +116,12 @@ class FastenerStore {
     }
 
     private static FastenerDetails toDetails(Map<String, AttributeValue> m) {
+        String driveTypeStr = str(m, "threadType");
         String headTypeStr   = str(m, "headType");
         String threadTypeStr = str(m, "threadType");
         return new FastenerDetails(
                 str(m, "subType"),
-                str(m, "driveType"),
+                driveTypeStr != null ? DriveType.valueOf(driveTypeStr) : null,
                 headTypeStr   != null ? HeadType.valueOf(headTypeStr)   : null,
                 str(m, "threadPitch"),
                 threadTypeStr != null ? ThreadType.valueOf(threadTypeStr) : null,

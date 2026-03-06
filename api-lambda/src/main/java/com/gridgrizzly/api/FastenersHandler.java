@@ -6,11 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gridgrizzly.api.model.Fastener;
-import com.gridgrizzly.api.model.FastenerDetails;
-import com.gridgrizzly.api.model.FastenerType;
-import com.gridgrizzly.api.model.RetailData;
-import com.gridgrizzly.api.model.UnitOfMeasure;
+import com.gridgrizzly.api.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -34,17 +30,17 @@ public class FastenersHandler
 
             new Fastener("f00000000003", FastenerType.SCREW, "Placeholder Screw 1", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Machine", "Phillips", null, null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Machine", DriveType.PHILLIPS, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-001", "Placeholder Co.")),
 
             new Fastener("f00000000004", FastenerType.SCREW, "Placeholder Screw 2", UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Wood", "Flat", null, null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Wood", DriveType.SLOTTED, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-002", "Placeholder Co.")),
 
             new Fastener("f00000000005", FastenerType.SCREW, "Placeholder Screw 3", UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
-                    new FastenerDetails("Sheet Metal", "Hex", null, null, null, null, null, null, null, null, null, null),
+                    new FastenerDetails("Sheet Metal", DriveType.HEX, null, null, null, null, null, null, null, null, null, null),
                     new RetailData(null, "SCRW-003", "Placeholder Co.")),
 
             new Fastener("f00000000006", FastenerType.NUT, "Placeholder Nut 1", UnitOfMeasure.IMPERIAL,
