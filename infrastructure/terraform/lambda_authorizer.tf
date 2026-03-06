@@ -57,8 +57,8 @@ resource "aws_lambda_function" "authorizer" {
   depends_on = [aws_cloudwatch_log_group.authorizer_lambda]
 
   logging_config {
-    application_log_level = var.log_level
-    system_log_level      = var.log_level
+    application_log_level = var.application_log_level
+    system_log_level      = var.system_log_level
     log_format            = "JSON"
     log_group             = aws_cloudwatch_log_group.authorizer_lambda.name
   }
