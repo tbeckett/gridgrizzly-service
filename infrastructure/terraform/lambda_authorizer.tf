@@ -59,6 +59,7 @@ resource "aws_lambda_function" "authorizer" {
   logging_config {
     log_level  = var.log_level
     log_format = "JSON"
+    log_group  = aws_cloudwatch_log_group.authorizer_lambda.name
   }
 
   tags = {

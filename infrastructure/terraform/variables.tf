@@ -173,6 +173,17 @@ variable "private_subnet_ids" {
 
 # ── Observability ─────────────────────────────────────────────────────────────
 
+variable "log_level" {
+  description = "Log level for Lambda functions. Controls verbosity of structured JSON logs sent to CloudWatch."
+  type        = string
+  default     = "INFO"
+
+  validation {
+    condition     = contains(["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"], var.log_level)
+    error_message = "log_level must be one of: TRACE, DEBUG, INFO, WARN, ERROR, FATAL."
+  }
+}
+
 variable "log_retention_days" {
   description = "CloudWatch Log Group retention period in days."
   type        = number
