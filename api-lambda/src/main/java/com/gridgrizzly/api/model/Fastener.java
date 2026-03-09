@@ -9,6 +9,10 @@ public record Fastener(
         String usageDescription,
         String finish,
         String material,
-        FastenerDetails details,
+        String[] fastenerSubTypes,
+        HeadDetails headDetails,
+        SizeDetails sizeDetails,
+        ThreadDetails threadDetails,
         RetailData retailData
-) {}
+) {
+}

@@ -178,8 +178,20 @@ components:
           type: string
         usageDescription:
           type: string
-        details:
-          $ref: '#/components/schemas/FastenerDetails'
+        finish:
+          type: string
+        material:
+          type: string
+        fastenerSubTypes:
+          type: array
+          items:
+            type: string
+        headDetails:
+          $ref: '#/components/schemas/HeadDetails'
+        sizeDetails:
+          $ref: '#/components/schemas/SizeDetails'
+        threadDetails:
+          $ref: '#/components/schemas/ThreadDetails'
         retailData:
           $ref: '#/components/schemas/RetailData'
 
@@ -206,8 +218,20 @@ components:
           type: string
         usageDescription:
           type: string
-        details:
-          $ref: '#/components/schemas/FastenerDetails'
+        finish:
+          type: string
+        material:
+          type: string
+        fastenerSubTypes:
+          type: array
+          items:
+            type: string
+        headDetails:
+          $ref: '#/components/schemas/HeadDetails'
+        sizeDetails:
+          $ref: '#/components/schemas/SizeDetails'
+        threadDetails:
+          $ref: '#/components/schemas/ThreadDetails'
         retailData:
           $ref: '#/components/schemas/RetailData'
 
@@ -226,19 +250,19 @@ components:
         - IMPERIAL
         - METRIC
 
-    FastenerDetails:
+    HeadDetails:
       type: object
       properties:
-        subType:
-          type: string
         driveType:
-          type: string
+          $ref: '#/components/schemas/DriveType'
         headType:
           $ref: '#/components/schemas/HeadType'
-        threadPitch:
+        headDiameter:
           type: string
-        threadType:
-          $ref: '#/components/schemas/ThreadType'
+
+    SizeDetails:
+      type: object
+      properties:
         length:
           type: string
         outsideDiameter:
@@ -249,10 +273,40 @@ components:
           type: string
         gauge:
           type: string
-        finish:
+
+    ThreadDetails:
+      type: object
+      properties:
+        threadPitch:
           type: string
-        material:
-          type: string
+        threadType:
+          $ref: '#/components/schemas/ThreadType'
+        shankType:
+          $ref: '#/components/schemas/ShankType'
+
+    DriveType:
+      type: string
+      enum:
+        - ALLEN
+        - COMBINATION
+        - FREARSON
+        - HEX
+        - PHILLIPS
+        - ROBERTSON
+        - SLOTTED
+        - TORX
+        - TRI_WING
+
+    ShankType:
+      type: string
+      enum:
+        - SMOOTH
+        - FULLY_THREADED
+        - PARTIALLY_THREADED
+        - SHOULDER
+        - RING
+        - SPIRAL
+        - BARBED
 
     HeadType:
       type: string

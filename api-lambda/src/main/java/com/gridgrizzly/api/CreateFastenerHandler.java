@@ -7,15 +7,13 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gridgrizzly.api.model.CreateFastenerRequest;
-import com.gridgrizzly.api.model.Fastener;
-import com.gridgrizzly.api.model.FastenerDetails;
-import com.gridgrizzly.api.model.RetailData;
+import com.gridgrizzly.api.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -62,7 +60,8 @@ public class CreateFastenerHandler
                     id, req.type(), req.title(), req.unitOfMeasure(),
                     req.description(), req.usageDescription(),
                     req.finish(), req.material(),
-                    req.details(), req.retailData());
+                    req.fastenerSubTypes(), req.headDetails(), req.sizeDetails(),
+                    req.threadDetails(), req.retailData());
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(201)
@@ -114,30 +113,49 @@ public class CreateFastenerHandler
         item.put("usageDescription", s(req.usageDescription()));
         item.put("createdAt",        s(createdAt));
 
+        // Scalar optional fields
+        putIfSet(item, "finish",   req.finish());
+        putIfSet(item, "material", req.material());
+
         // Nested objects
-        if (req.details() != null)    item.put("details",    toAttributeMap(req.details()));
-        if (req.retailData() != null) item.put("retailData", toAttributeMap(req.retailData()));
+        if (req.fastenerSubTypes() != null && req.fastenerSubTypes().length > 0)
+            item.put("fastenerSubTypes", AttributeValue.fromSs(Arrays.asList(req.fastenerSubTypes())));
+        if (req.headDetails() != null)   item.put("headDetails",   toAttributeMap(req.headDetails()));
+        if (req.sizeDetails() != null)   item.put("sizeDetails",   toAttributeMap(req.sizeDetails()));
+        if (req.threadDetails() != null) item.put("threadDetails", toAttributeMap(req.threadDetails()));
+        if (req.retailData() != null)    item.put("retailData",    toAttributeMap(req.retailData()));
 
         return item;
     }
 
-    private AttributeValue toAttributeMap(FastenerDetails d) {
+    private AttributeValue toAttributeMap(HeadDetails h) {
         Map<String, AttributeValue> m = new HashMap<>();
-        putIfSet(m, "subType",          d.subType());
-        putIfSet(m, "driveType",        d.driveType() != null ? d.driveType().name() : null);
-        putIfSet(m, "headType",         d.headType() != null ? d.headType().name() : null);
-        putIfSet(m, "threadPitch",      d.threadPitch());
-        putIfSet(m, "threadType",       d.threadType() != null ? d.threadType().name() : null);
-        putIfSet(m, "length",           d.length());
-        putIfSet(m, "outsideDiameter",  d.outsideDiameter());
-        putIfSet(m, "insideDiameter",   d.insideDiameter());
-        putIfSet(m, "thickness",        d.thickness());
-        putIfSet(m, "gauge",            d.gauge());
+        putIfSet(m, "driveType",    h.driveType() != null ? h.driveType().name() : null);
+        putIfSet(m, "headType",     h.headType() != null ? h.headType().name() : null);
+        putIfSet(m, "headDiameter", h.headDiameter());
+        return AttributeValue.fromM(m);
+    }
+
+    private AttributeValue toAttributeMap(SizeDetails sz) {
+        Map<String, AttributeValue> m = new HashMap<>();
+        putIfSet(m, "length",          sz.length());
+        putIfSet(m, "outsideDiameter", sz.outsideDiameter());
+        putIfSet(m, "insideDiameter",  sz.insideDiameter());
+        putIfSet(m, "thickness",       sz.thickness());
+        putIfSet(m, "gauge",           sz.gauge());
+        return AttributeValue.fromM(m);
+    }
+
+    private AttributeValue toAttributeMap(ThreadDetails t) {
+        Map<String, AttributeValue> m = new HashMap<>();
+        putIfSet(m, "threadPitch", t.threadPitch());
+        putIfSet(m, "threadType",  t.threadType() != null ? t.threadType().name() : null);
+        putIfSet(m, "shankType",   t.shankType() != null ? t.shankType().name() : null);
         return AttributeValue.fromM(m);
     }
 
     private AttributeValue toAttributeMap(RetailData r) {
-        Map<String, AttributeValue> m = new HashMap<>();
+    Map<String, AttributeValue> m = new HashMap<>();
         putIfSet(m, "upc",     r.upc());
         putIfSet(m, "sku",     r.sku());
         putIfSet(m, "company", r.company());
