@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,17 +65,29 @@ class FastenerStore {
         item.put("description",      s(req.description()));
         item.put("usageDescription", s(req.usageDescription()));
         item.put("createdAt",        s(createdAt));
-        if (req.details() != null)    item.put("details",    toAttrMap(req.details()));
-        if (req.retailData() != null) item.put("retailData", toAttrMap(req.retailData()));
+        putIfSet(item, "finish",   req.finish());
+        putIfSet(item, "material", req.material());
+        if (req.fastenerSubTypes() != null && req.fastenerSubTypes().length > 0)
+            item.put("fastenerSubTypes", AttributeValue.fromSs(Arrays.asList(req.fastenerSubTypes())));
+        if (req.headDetails() != null)   item.put("headDetails",   toAttrMap(req.headDetails()));
+        if (req.sizeDetails() != null)   item.put("sizeDetails",   toAttrMap(req.sizeDetails()));
+        if (req.threadDetails() != null) item.put("threadDetails", toAttrMap(req.threadDetails()));
+        if (req.retailData() != null)    item.put("retailData",    toAttrMap(req.retailData()));
         return item;
     }
 
     // ── Deserialisation ───────────────────────────────────────────────────────
 
     static Fastener toFastener(Map<String, AttributeValue> item) {
-        FastenerDetails details    = item.containsKey("details")
-                ? toDetails(item.get("details").m()) : null;
-        RetailData      retailData = item.containsKey("retailData")
+        String[]      fastenerSubTypes = item.containsKey("fastenerSubTypes")
+                ? item.get("fastenerSubTypes").ss().toArray(new String[0]) : null;
+        HeadDetails   headDetails      = item.containsKey("headDetails")
+                ? toHeadDetails(item.get("headDetails").m()) : null;
+        SizeDetails   sizeDetails      = item.containsKey("sizeDetails")
+                ? toSizeDetails(item.get("sizeDetails").m()) : null;
+        ThreadDetails threadDetails    = item.containsKey("threadDetails")
+                ? toThreadDetails(item.get("threadDetails").m()) : null;
+        RetailData    retailData       = item.containsKey("retailData")
                 ? toRetailData(item.get("retailData").m()) : null;
 
         return new Fastener(
@@ -84,26 +97,40 @@ class FastenerStore {
                 UnitOfMeasure.valueOf(item.get("unitOfMeasure").s()),
                 item.get("description").s(),
                 item.get("usageDescription").s(),
-                item.get("finish").s(),
-                item.get("material").s(),
-                details,
+                str(item, "finish"),
+                str(item, "material"),
+                fastenerSubTypes,
+                headDetails,
+                sizeDetails,
+                threadDetails,
                 retailData);
     }
 
     // ── Attribute value helpers ───────────────────────────────────────────────
 
-    static AttributeValue toAttrMap(FastenerDetails d) {
+    static AttributeValue toAttrMap(HeadDetails h) {
         Map<String, AttributeValue> m = new HashMap<>();
-        putIfSet(m, "subType",         d.subType());
-        putIfSet(m, "driveType",       d.driveType() != null ? d.driveType().name() : null);
-        putIfSet(m, "headType",        d.headType() != null ? d.headType().name() : null);
-        putIfSet(m, "threadPitch",     d.threadPitch());
-        putIfSet(m, "threadType",      d.threadType() != null ? d.threadType().name() : null);
-        putIfSet(m, "length",          d.length());
-        putIfSet(m, "outsideDiameter", d.outsideDiameter());
-        putIfSet(m, "insideDiameter",  d.insideDiameter());
-        putIfSet(m, "thickness",       d.thickness());
-        putIfSet(m, "gauge",           d.gauge());
+        putIfSet(m, "driveType",    h.driveType() != null ? h.driveType().name() : null);
+        putIfSet(m, "headType",     h.headType() != null ? h.headType().name() : null);
+        putIfSet(m, "headDiameter", h.headDiameter());
+        return AttributeValue.fromM(m);
+    }
+
+    static AttributeValue toAttrMap(SizeDetails sz) {
+        Map<String, AttributeValue> m = new HashMap<>();
+        putIfSet(m, "length",          sz.length());
+        putIfSet(m, "outsideDiameter", sz.outsideDiameter());
+        putIfSet(m, "insideDiameter",  sz.insideDiameter());
+        putIfSet(m, "thickness",       sz.thickness());
+        putIfSet(m, "gauge",           sz.gauge());
+        return AttributeValue.fromM(m);
+    }
+
+    static AttributeValue toAttrMap(ThreadDetails t) {
+        Map<String, AttributeValue> m = new HashMap<>();
+        putIfSet(m, "threadPitch", t.threadPitch());
+        putIfSet(m, "threadType",  t.threadType() != null ? t.threadType().name() : null);
+        putIfSet(m, "shankType",   t.shankType() != null ? t.shankType().name() : null);
         return AttributeValue.fromM(m);
     }
 
@@ -115,21 +142,31 @@ class FastenerStore {
         return AttributeValue.fromM(m);
     }
 
-    private static FastenerDetails toDetails(Map<String, AttributeValue> m) {
-        String driveTypeStr = str(m, "threadType");
-        String headTypeStr   = str(m, "headType");
-        String threadTypeStr = str(m, "threadType");
-        return new FastenerDetails(
-                str(m, "subType"),
+    private static HeadDetails toHeadDetails(Map<String, AttributeValue> m) {
+        String driveTypeStr = str(m, "driveType");
+        String headTypeStr  = str(m, "headType");
+        return new HeadDetails(
                 driveTypeStr != null ? DriveType.valueOf(driveTypeStr) : null,
-                headTypeStr   != null ? HeadType.valueOf(headTypeStr)   : null,
-                str(m, "threadPitch"),
-                threadTypeStr != null ? ThreadType.valueOf(threadTypeStr) : null,
+                headTypeStr  != null ? HeadType.valueOf(headTypeStr)   : null,
+                str(m, "headDiameter"));
+    }
+
+    private static SizeDetails toSizeDetails(Map<String, AttributeValue> m) {
+        return new SizeDetails(
                 str(m, "length"),
                 str(m, "outsideDiameter"),
                 str(m, "insideDiameter"),
                 str(m, "thickness"),
                 str(m, "gauge"));
+    }
+
+    private static ThreadDetails toThreadDetails(Map<String, AttributeValue> m) {
+        String threadTypeStr = str(m, "threadType");
+        String shankTypeStr  = str(m, "shankType");
+        return new ThreadDetails(
+                str(m, "threadPitch"),
+                threadTypeStr != null ? ThreadType.valueOf(threadTypeStr) : null,
+                shankTypeStr  != null ? ShankType.valueOf(shankTypeStr)   : null);
     }
 
     private static RetailData toRetailData(Map<String, AttributeValue> m) {

@@ -6,8 +6,11 @@ public record CreateFastenerRequest(
         UnitOfMeasure unitOfMeasure,
         String description,
         String usageDescription,
-        FastenerDetails details,
-        RetailData retailData,
         String finish,
-        String material
+        String material,
+        String[] fastenerSubTypes,
+        HeadDetails headDetails,
+        SizeDetails sizeDetails,
+        ThreadDetails threadDetails,
+        RetailData retailData
 ) {}

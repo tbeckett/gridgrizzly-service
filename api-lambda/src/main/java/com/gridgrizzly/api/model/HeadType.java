@@ -10,5 +10,6 @@ public enum HeadType {
     HEX_WASHER,
     SLOTTED_HEX_WASHER,
     SOCKET_CAP,
-    BUTTON
+    BUTTON,
+    OTHER
 }

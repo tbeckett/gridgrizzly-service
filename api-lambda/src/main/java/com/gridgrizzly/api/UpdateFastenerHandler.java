@@ -57,7 +57,8 @@ public class UpdateFastenerHandler
             Fastener fastener = new Fastener(
                     fastenerId, req.type(), req.title(), req.unitOfMeasure(),
                     req.description(), req.usageDescription(), req.finish(),
-                    req.material(), req.details(), req.retailData());
+                    req.material(), req.fastenerSubTypes(), req.headDetails(),
+                    req.sizeDetails(), req.threadDetails(), req.retailData());
 
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
