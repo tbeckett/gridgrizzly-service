@@ -7,5 +7,7 @@ public record CreateFastenerRequest(
         String description,
         String usageDescription,
         FastenerDetails details,
-        RetailData retailData
+        RetailData retailData,
+        String finish,
+        String material
 ) {}

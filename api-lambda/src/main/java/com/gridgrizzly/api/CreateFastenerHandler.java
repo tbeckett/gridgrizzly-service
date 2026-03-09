@@ -61,6 +61,7 @@ public class CreateFastenerHandler
             Fastener created = new Fastener(
                     id, req.type(), req.title(), req.unitOfMeasure(),
                     req.description(), req.usageDescription(),
+                    req.finish(), req.material(),
                     req.details(), req.retailData());
 
             return new APIGatewayProxyResponseEvent()
@@ -132,8 +133,6 @@ public class CreateFastenerHandler
         putIfSet(m, "insideDiameter",   d.insideDiameter());
         putIfSet(m, "thickness",        d.thickness());
         putIfSet(m, "gauge",            d.gauge());
-        putIfSet(m, "finish",           d.finish());
-        putIfSet(m, "material",         d.material());
         return AttributeValue.fromM(m);
     }
 

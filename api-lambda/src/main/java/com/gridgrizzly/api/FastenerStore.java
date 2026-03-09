@@ -84,6 +84,8 @@ class FastenerStore {
                 UnitOfMeasure.valueOf(item.get("unitOfMeasure").s()),
                 item.get("description").s(),
                 item.get("usageDescription").s(),
+                item.get("finish").s(),
+                item.get("material").s(),
                 details,
                 retailData);
     }
@@ -102,8 +104,6 @@ class FastenerStore {
         putIfSet(m, "insideDiameter",  d.insideDiameter());
         putIfSet(m, "thickness",       d.thickness());
         putIfSet(m, "gauge",           d.gauge());
-        putIfSet(m, "finish",          d.finish());
-        putIfSet(m, "material",        d.material());
         return AttributeValue.fromM(m);
     }
 
@@ -129,9 +129,7 @@ class FastenerStore {
                 str(m, "outsideDiameter"),
                 str(m, "insideDiameter"),
                 str(m, "thickness"),
-                str(m, "gauge"),
-                str(m, "finish"),
-                str(m, "material"));
+                str(m, "gauge"));
     }
 
     private static RetailData toRetailData(Map<String, AttributeValue> m) {

@@ -7,6 +7,8 @@ public record Fastener(
         UnitOfMeasure unitOfMeasure,
         String description,
         String usageDescription,
+        String finish,
+        String material,
         FastenerDetails details,
         RetailData retailData
 ) {}

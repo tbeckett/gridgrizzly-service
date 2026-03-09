@@ -10,7 +10,5 @@ public record FastenerDetails(
         String outsideDiameter,
         String insideDiameter,
         String thickness,
-        String gauge,
-        String finish,
-        String material
+        String gauge
 ) {}
