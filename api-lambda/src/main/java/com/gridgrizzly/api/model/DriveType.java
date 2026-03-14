@@ -10,4 +10,5 @@ public enum DriveType {
     SLOTTED,
     TORX,
     TRI_WING,
+    OTHER
 }

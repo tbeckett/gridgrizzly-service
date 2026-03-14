@@ -8,5 +8,5 @@ public enum ThreadType {
     NPT_BSPP,
     BSPP,
     _8UN,
-    UNKNOWN
+    OTHER
 }
