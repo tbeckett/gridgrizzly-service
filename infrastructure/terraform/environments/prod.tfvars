@@ -45,8 +45,8 @@ private_subnet_ids = [
   "subnet-0349260bb6d3c914e", # us-east-1c
 ]
 
-# Observability
-application_log_level = "WARN"
-system_log_level      = "WARN"
+# Observability TODO: Reduce these to warn
+application_log_level = "INFO"
+system_log_level      = "INFO"
 log_retention_days    = 90 # 90-day retention for compliance
 xray_tracing_enabled  = true
