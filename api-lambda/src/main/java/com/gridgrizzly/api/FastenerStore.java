@@ -7,6 +7,8 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+import software.amazon.awssdk.services.dynamodb.model.ReturnValue;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,6 +34,28 @@ class FastenerStore {
         return resp.items().isEmpty() ? null : resp.items().getFirst();
     }
 
+    // ── Bin number counter ────────────────────────────────────────────────────
+
+    /**
+     * Atomically increments and returns the next bin number for the given user.
+     * The counter is stored as a dedicated item (resourceId = "META#binCounter")
+     * in the same table. DynamoDB's UpdateItem ADD operation is atomic, so
+     * concurrent Lambda invocations for the same user cannot produce duplicates.
+     * The counter only ever increases — deleting fasteners has no effect on it.
+     */
+    static int nextBinNumber(String userId) {
+        var resp = DDB.updateItem(UpdateItemRequest.builder()
+                .tableName(TABLE_NAME)
+                .key(Map.of(
+                        "userId",     s(userId),
+                        "resourceId", s("META#binCounter")))
+                .updateExpression("ADD binCounter :inc")
+                .expressionAttributeValues(Map.of(":inc", AttributeValue.fromN("1")))
+                .returnValues(ReturnValue.UPDATED_NEW)
+                .build());
+        return Integer.parseInt(resp.attributes().get("binCounter").n());
+    }
+
     // ── Mutations ─────────────────────────────────────────────────────────────
 
     static void putItem(Map<String, AttributeValue> item) {
@@ -53,7 +77,7 @@ class FastenerStore {
     // ── Item builder ──────────────────────────────────────────────────────────
 
     static Map<String, AttributeValue> buildItem(
-            String userId, String fastenerId, String createdAt, CreateFastenerRequest req) {
+            String userId, String fastenerId, String createdAt, int binNumber, CreateFastenerRequest req) {
 
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("userId",           s(userId));
@@ -61,6 +85,7 @@ class FastenerStore {
         item.put("fastenerId",       s(fastenerId));
         item.put("type",             s(req.type().name()));
         item.put("title",            s(req.title()));
+        item.put("binNumber",        AttributeValue.fromN(String.valueOf(binNumber)));
         item.put("unitOfMeasure",    s(req.unitOfMeasure().name()));
         item.put("description",      s(req.description()));
         item.put("usageDescription", s(req.usageDescription()));
@@ -90,10 +115,14 @@ class FastenerStore {
         RetailData    retailData       = item.containsKey("retailData")
                 ? toRetailData(item.get("retailData").m()) : null;
 
+        int binNumber = item.containsKey("binNumber")
+                ? Integer.parseInt(item.get("binNumber").n()) : 0;
+
         return new Fastener(
                 item.get("fastenerId").s(),
                 FastenerType.valueOf(item.get("type").s()),
                 item.get("title").s(),
+                binNumber,
                 UnitOfMeasure.valueOf(item.get("unitOfMeasure").s()),
                 item.get("description").s(),
                 item.get("usageDescription").s(),
