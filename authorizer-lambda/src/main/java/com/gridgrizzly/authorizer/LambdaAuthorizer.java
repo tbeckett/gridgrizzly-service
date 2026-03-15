@@ -128,7 +128,7 @@ public class LambdaAuthorizer
             log.warn("Missing Authorization header");
             throw new RuntimeException("Unauthorized");
         }
-
+        log.info("Authorization header: {}", authHeader);
         // Expected format: "Bearer <token>"
         String[] parts = authHeader.split(" ", 2);
         if (parts.length != 2 || !"Bearer".equalsIgnoreCase(parts[0]) || parts[1].isBlank()) {
