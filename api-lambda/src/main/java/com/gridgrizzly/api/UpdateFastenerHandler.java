@@ -52,10 +52,13 @@ public class UpdateFastenerHandler
             }
 
             String createdAt = existing.get("createdAt").s();
-            FastenerStore.putItem(FastenerStore.buildItem(userId, fastenerId, createdAt, req));
+            int    binNumber = existing.containsKey("binNumber")
+                    ? Integer.parseInt(existing.get("binNumber").n())
+                    : FastenerStore.nextBinNumber(userId);
+            FastenerStore.putItem(FastenerStore.buildItem(userId, fastenerId, createdAt, binNumber, req));
 
             Fastener fastener = new Fastener(
-                    fastenerId, req.type(), req.title(), req.unitOfMeasure(),
+                    fastenerId, req.type(), req.title(), binNumber, req.unitOfMeasure(),
                     req.description(), req.usageDescription(), req.finish(),
                     req.material(), req.fastenerSubTypes(), req.headDetails(),
                     req.sizeDetails(), req.threadDetails(), req.retailData());

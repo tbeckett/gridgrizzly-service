@@ -4,6 +4,7 @@ public record Fastener(
         String id,
         FastenerType type,
         String title,
+        int binNumber,
         UnitOfMeasure unitOfMeasure,
         String description,
         String usageDescription,

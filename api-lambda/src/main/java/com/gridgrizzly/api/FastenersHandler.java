@@ -18,52 +18,52 @@ public class FastenersHandler
             .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     private static final List<Fastener> FASTENERS = List.of(
-            new Fastener("f00000000001", FastenerType.BOLT, "Placeholder Bolt 1", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000001", FastenerType.BOLT, "Placeholder Bolt 1", 1, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Hex"}, null, null, null,
                     new RetailData(null, "BOLT-001", "Placeholder Co.")),
 
-            new Fastener("f00000000002", FastenerType.BOLT, "Placeholder Bolt 2", UnitOfMeasure.METRIC,
+            new Fastener("f00000000002", FastenerType.BOLT, "Placeholder Bolt 2", 2, UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Carriage"}, null, null, null,
                     new RetailData(null, "BOLT-002", "Placeholder Co.")),
 
-            new Fastener("f00000000003", FastenerType.SCREW, "Placeholder Screw 1", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000003", FastenerType.SCREW, "Placeholder Screw 1", 3, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Machine"}, new HeadDetails(DriveType.PHILLIPS, null, null), null, null,
                     new RetailData(null, "SCRW-001", "Placeholder Co.")),
 
-            new Fastener("f00000000004", FastenerType.SCREW, "Placeholder Screw 2", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000004", FastenerType.SCREW, "Placeholder Screw 2", 4, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Wood"}, new HeadDetails(DriveType.SLOTTED, null, null), null, null,
                     new RetailData(null, "SCRW-002", "Placeholder Co.")),
 
-            new Fastener("f00000000005", FastenerType.SCREW, "Placeholder Screw 3", UnitOfMeasure.METRIC,
+            new Fastener("f00000000005", FastenerType.SCREW, "Placeholder Screw 3", 5, UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Sheet Metal"}, new HeadDetails(DriveType.HEX, null, null), null, null,
                     new RetailData(null, "SCRW-003", "Placeholder Co.")),
 
-            new Fastener("f00000000006", FastenerType.NUT, "Placeholder Nut 1", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000006", FastenerType.NUT, "Placeholder Nut 1", 6, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Hex"}, null, null, null,
                     new RetailData(null, "NUT-001", "Placeholder Co.")),
 
-            new Fastener("f00000000007", FastenerType.NUT, "Placeholder Nut 2", UnitOfMeasure.METRIC,
+            new Fastener("f00000000007", FastenerType.NUT, "Placeholder Nut 2", 7, UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Lock"}, null, null, null,
                     new RetailData(null, "NUT-002", "Placeholder Co.")),
 
-            new Fastener("f00000000008", FastenerType.WASHER, "Placeholder Washer 1", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000008", FastenerType.WASHER, "Placeholder Washer 1", 8, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Flat"}, null, null, null,
                     new RetailData(null, "WSHR-001", "Placeholder Co.")),
 
-            new Fastener("f00000000009", FastenerType.WASHER, "Placeholder Washer 2", UnitOfMeasure.METRIC,
+            new Fastener("f00000000009", FastenerType.WASHER, "Placeholder Washer 2", 9, UnitOfMeasure.METRIC,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Lock"}, null, null, null,
                     new RetailData(null, "WSHR-002", "Placeholder Co.")),
 
-            new Fastener("f00000000010", FastenerType.NAIL, "Placeholder Nail 1", UnitOfMeasure.IMPERIAL,
+            new Fastener("f00000000010", FastenerType.NAIL, "Placeholder Nail 1", 10, UnitOfMeasure.IMPERIAL,
                     "Placeholder description", "Placeholder usage description",
                     "", "", new String[]{"Common"}, null, null, null,
                     new RetailData(null, "NAIL-001", "Placeholder Co."))

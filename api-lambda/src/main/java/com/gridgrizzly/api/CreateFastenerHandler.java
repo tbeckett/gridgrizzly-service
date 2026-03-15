@@ -50,14 +50,15 @@ public class CreateFastenerHandler
 
             String id        = UUID.randomUUID().toString();
             String createdAt = Instant.now().toString();
+            int    binNumber = FastenerStore.nextBinNumber(userId);
 
             DDB.putItem(PutItemRequest.builder()
                     .tableName(TABLE_NAME)
-                    .item(buildItem(userId, id, createdAt, req))
+                    .item(buildItem(userId, id, createdAt, binNumber, req))
                     .build());
 
             Fastener created = new Fastener(
-                    id, req.type(), req.title(), req.unitOfMeasure(),
+                    id, req.type(), req.title(), binNumber, req.unitOfMeasure(),
                     req.description(), req.usageDescription(),
                     req.finish(), req.material(),
                     req.fastenerSubTypes(), req.headDetails(), req.sizeDetails(),
@@ -96,7 +97,7 @@ public class CreateFastenerHandler
     // ── DynamoDB item builder ─────────────────────────────────────────────────
 
     private Map<String, AttributeValue> buildItem(
-            String userId, String id, String createdAt, CreateFastenerRequest req) {
+            String userId, String id, String createdAt, int binNumber, CreateFastenerRequest req) {
 
         Map<String, AttributeValue> item = new HashMap<>();
 
@@ -108,6 +109,7 @@ public class CreateFastenerHandler
         // Scalar fields
         item.put("type",             s(req.type().name()));
         item.put("title",            s(req.title()));
+        item.put("binNumber",        AttributeValue.fromN(String.valueOf(binNumber)));
         item.put("unitOfMeasure",    s(req.unitOfMeasure().name()));
         item.put("description",      s(req.description()));
         item.put("usageDescription", s(req.usageDescription()));
