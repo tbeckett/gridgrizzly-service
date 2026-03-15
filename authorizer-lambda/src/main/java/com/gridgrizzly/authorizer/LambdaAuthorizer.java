@@ -84,6 +84,14 @@ public class LambdaAuthorizer
         String methodArn = event.getMethodArn();
         log.info("Authorizer invoked. methodArn={}", methodArn);
 
+        /*TODO: remove this logging or down-size it to debug */
+        var headers = event.getHeaders();
+        if (headers != null) {
+            headers.forEach((name, value) -> log.info("Request header: {}={}", name, value));
+        } else {
+            log.info("No headers present in authorizer event");
+        }
+
         String token = extractBearerToken(event);
 
         try {
