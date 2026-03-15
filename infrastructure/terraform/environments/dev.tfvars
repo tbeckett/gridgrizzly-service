@@ -15,7 +15,7 @@ aws_region  = "us-east-1"
 
 # Auth0 — dev tenant
 auth0_domain   = "auth.gridgrizzly.com"
-auth0_audience = "https://api.gridgrizzly.com"
+auth0_audience = "https://api.gridgrizzly.com/"
 
 # Lambda
 lambda_jar_path              = "../../authorizer-lambda/target/lambda-authorizer-1.0.0.jar"
